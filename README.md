@@ -11,6 +11,7 @@ Cette application Todo est construite avec Meteor.js, React et TypeScript. Elle 
 -   🔔 **Notifications** : Alertes pour les messages non lus
 -   📱 **Interface responsive** : Design adapté à différentes tailles d'écran
 -   🔍 **Filtrage** : Possibilité de filtrer les tâches terminées
+-   🛡️ **Validation des données** : Sécurisation des inputs utilisateur côté client et serveur
 
 ## Prérequis
 
@@ -72,9 +73,12 @@ meteor-todo-socket/
 │   │   └── UsersPublication.ts        # Publication des utilisateurs
 │   │
 │   ├── types/           # Types TypeScript
-│   │   ├── message.types.ts           # Types pour les messages
-│   │   ├── task.types.ts              # Types pour les tâches
-│   │   └── user.types.ts              # Types pour les utilisateurs
+│   │   ├── message.ts           # Types pour les messages
+│   │   ├── task.ts              # Types pour les tâches
+│   │   └── user.ts              # Types pour les utilisateurs
+│   │
+│   ├── utils/           # Utilitaires
+│   │   └── validators.ts              # Validation des données utilisateur
 │   │
 │   └── ui/              # Composants React
 │       ├── App.tsx                    # Composant principal
@@ -149,12 +153,34 @@ Cette application utilise un système d'authentification personnalisé basé sur
 3. Un token est généré à la connexion et stocké dans le localStorage
 4. Ce token est utilisé pour authentifier les requêtes ultérieures
 
+## Sécurisation des données utilisateur
+
+L'application implémente une validation complète des données à deux niveaux pour protéger contre les entrées malveillantes :
+
+### Validation côté client
+
+-   Vérification des champs obligatoires
+-   Limitation de la longueur des inputs avec les attributs HTML `minlength` et `maxlength`
+-   Validation des formats avant toute soumission au serveur
+-   Feedback d'erreur immédiat pour l'utilisateur
+
+### Validation côté serveur
+
+-   Validation indépendante des données reçues par le serveur
+-   Règles strictes pour les noms d'utilisateur (3-20 caractères, alphanumériques avec tirets/underscores)
+-   Règles pour les mots de passe (minimum 6 caractères)
+-   Nettoyage du texte des tâches pour éliminer tout code HTML potentiellement dangereux
+-   Limitation de la longueur des messages (maximum 500 caractères)
+
+Cette double couche de validation garantit la sécurité des données même si la validation côté client est contournée.
+
 ## Structuration du code
 
 -   **Architecture**: Modèle-Vue-Contrôleur (MVC)
 -   **Typages**: Utilisation extensive des interfaces TypeScript pour garantir la sécurité des types
 -   **CSS**: Styles séparés par composants avec une approche modulaire
 -   **Publications/Souscriptions**: Utilisation du modèle de publication/souscription de Meteor pour les données en temps réel
+-   **Validation**: Système de validation modulaire et réutilisable dans `imports/utils/validators.ts`
 
 ## Technologies utilisées
 
