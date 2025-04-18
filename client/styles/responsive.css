@@ -1,0 +1,56 @@
+/* Media queries pour la gestion de la responsivité */
+
+@media (max-width: 500px) {
+    .task-form {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 400px) {
+    .tasks > li {
+        padding: 12px;
+    }
+
+    .task-checkbox {
+        margin-right: 6px !important;
+    }
+
+    .tasks > li > span {
+        padding: 0 4px !important;
+        font-size: 1em !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .chat-container {
+        flex-direction: row;
+    }
+
+    .users-list {
+        width: 280px;
+        max-height: none;
+        height: 100%;
+    }
+
+    .chat-tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        z-index: 100;
+        font-size: 24px;
+    }
+
+    .chat-tab:hover {
+        background-color: var(--primary-color-light);
+    }
+}

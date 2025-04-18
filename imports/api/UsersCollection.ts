@@ -1,9 +1,4 @@
 import { Mongo } from "meteor/mongo";
+import { UserCredentials } from "/imports/types/user";
 
-export interface UserCredentials {
-    username: string;
-    hashedPassword: string;
-    createdAt: Date;
-}
-
-export const UsersCredentialsCollection = new Mongo.Collection<UserCredentials>("usersCredentials");
+export const UsersCredentialsCollection = new Mongo.Collection<UserCredentials>("users_credentials");

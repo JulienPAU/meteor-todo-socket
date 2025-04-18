@@ -1,23 +1,17 @@
 import { Meteor } from "meteor/meteor";
 import { TasksCollection } from "./TasksCollection";
-
-interface TaskInsert {
-    text: string;
-}
-
-interface TaskToggle {
-    _id: string;
-    isChecked: boolean;
-}
-
-interface TaskDelete {
-    _id: string;
-}
+import { TaskInsert, TaskToggle, TaskDelete } from "/imports/types/task";
+import { validateTaskText } from "../utils/validators";
 
 Meteor.methods({
     "tasks.insert"(doc: TaskInsert) {
         if (!this.userId) {
             throw new Meteor.Error("Non autorisé", "Vous devez être connecté pour créer une tâche");
+        }
+
+        const textValidation = validateTaskText(doc.text);
+        if (!textValidation.isValid) {
+            throw new Meteor.Error("invalid-text", textValidation.error);
         }
 
         return TasksCollection.insertAsync({
@@ -32,7 +26,6 @@ Meteor.methods({
             throw new Meteor.Error("Non autorisé", "Vous devez être connecté pour modifier une tâche");
         }
 
-        // Vérification optionnelle que l'utilisateur est propriétaire de la tâche
         const task = TasksCollection.findOneAsync({ _id, userId: this.userId });
         if (!task) {
             throw new Meteor.Error("Non autorisé", "Vous ne pouvez modifier que vos propres tâches");
@@ -48,7 +41,6 @@ Meteor.methods({
             throw new Meteor.Error("Non autorisé", "Vous devez être connecté pour supprimer une tâche");
         }
 
-        // Vérification optionnelle que l'utilisateur est propriétaire de la tâche
         const task = TasksCollection.findOneAsync({ _id, userId: this.userId });
         if (!task) {
             throw new Meteor.Error("Non autorisé", "Vous ne pouvez supprimer que vos propres tâches");

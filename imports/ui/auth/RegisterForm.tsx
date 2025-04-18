@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { validateUsername, validatePassword } from "../../utils/validators";
 
 interface User {
     _id: string;
@@ -21,8 +22,15 @@ export const RegisterForm = ({ setUser }: RegisterFormProps) => {
         e.preventDefault();
         setError("");
 
-        if (!username || !password || !confirmPassword) {
-            setError("Veuillez remplir tous les champs");
+        const usernameValidation = validateUsername(username);
+        if (!usernameValidation.isValid) {
+            setError(usernameValidation.error || "Nom d'utilisateur invalide");
+            return;
+        }
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            setError(passwordValidation.error || "Mot de passe invalide");
             return;
         }
 
@@ -35,7 +43,6 @@ export const RegisterForm = ({ setUser }: RegisterFormProps) => {
             setIsLoading(true);
             await Meteor.callAsync("auth.register", { username, password });
 
-            // Connexion immédiate après l'inscription
             const result = await Meteor.callAsync("auth.login", { username, password });
 
             localStorage.setItem("Meteor.userId", result.userId);
@@ -56,15 +63,15 @@ export const RegisterForm = ({ setUser }: RegisterFormProps) => {
             {error && <div className="error-message">{error}</div>}
 
             <div className="form-group">
-                <input type="text" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} />
+                <input type="text" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} minLength={3} maxLength={20} />
             </div>
 
             <div className="form-group">
-                <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+                <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} minLength={6} maxLength={50} />
             </div>
 
             <div className="form-group">
-                <input type="password" placeholder="Confirmer le mot de passe" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} />
+                <input type="password" placeholder="Confirmer le mot de passe" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} minLength={6} maxLength={50} />
             </div>
 
             <button type="submit" disabled={isLoading}>

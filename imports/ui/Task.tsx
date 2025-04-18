@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Task as TaskType } from "/imports/api/TasksCollection";
+import { Task as TaskType } from "/imports/types/task";
 import { ConfirmationModal } from "./ConfirmationModal";
 
 interface TaskProps {

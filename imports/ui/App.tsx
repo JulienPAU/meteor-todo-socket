@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
-import { TasksCollection, Task as TaskType } from "/imports/api/TasksCollection";
-import { Task } from "./Task";
+import { TasksCollection } from "/imports/api/TasksCollection";
+import { MessagesCollection } from "/imports/api/MessagesCollection";
+import { Task as TaskComponent } from "./Task";
 import { TaskForm } from "./TaskForm";
 import { LoginForm } from "./auth/LoginForm";
 import { RegisterForm } from "./auth/RegisterForm";
+import { ChatContainer } from "./chat/ChatContainer";
 import { Meteor } from "meteor/meteor";
-
-interface User {
-    _id: string;
-    username?: string;
-}
+import { User } from "/imports/types/user";
+import { Task } from "/imports/types/task";
 
 export const App = () => {
     const [user, setUser] = useState<User | null>(null);
     const [showLogin, setShowLogin] = useState(true);
+    const [showChat, setShowChat] = useState(false);
 
-    const isLoading = useSubscribe("tasks");
+    const isTasksLoading = useSubscribe("tasks");
+    const isMessagesLoading = useSubscribe("messages"); // Nécessaire pour les notifications de chat
     const [hideCompleted, setHideCompleted] = useState(false);
 
     useEffect(() => {
@@ -43,9 +44,13 @@ export const App = () => {
         setUser(null);
     };
 
-    const handleToggleChecked = ({ _id, isChecked }: TaskType) => Meteor.callAsync("tasks.toggleChecked", { _id, isChecked });
+    const toggleChat = () => {
+        setShowChat(!showChat);
+    };
 
-    const handleDelete = ({ _id }: TaskType) => Meteor.callAsync("tasks.delete", { _id });
+    const handleToggleChecked = ({ _id, isChecked }: Task) => Meteor.callAsync("tasks.toggleChecked", { _id, isChecked });
+
+    const handleDelete = ({ _id }: Task) => Meteor.callAsync("tasks.delete", { _id });
 
     const hideCompletedFilter = { isChecked: { $ne: true } };
 
@@ -66,6 +71,17 @@ export const App = () => {
         return TasksCollection.find(hideCompleted ? hideCompletedFilter : {}, {
             sort: { createdAt: -1 },
         }).fetch();
+    });
+
+    const unreadMessagesCount = useTracker(() => {
+        if (!user || showChat) {
+            return 0;
+        }
+
+        return MessagesCollection.find({
+            receiverId: user._id,
+            read: false,
+        }).count();
     });
 
     if (!user) {
@@ -105,7 +121,7 @@ export const App = () => {
         );
     }
 
-    if (isLoading()) {
+    if (isTasksLoading()) {
         return (
             <div className="app">
                 <header>
@@ -124,6 +140,31 @@ export const App = () => {
         );
     }
 
+    if (showChat && user) {
+        return (
+            <div className="app">
+                <header>
+                    <div className="app-bar">
+                        <div className="app-header">
+                            <h1>💬 Chat</h1>
+                        </div>
+                        <div className="user-menu">
+                            <button onClick={toggleChat} className="back-button" style={{ backgroundColor: "var(--secondary-color)" }}>
+                                Retour aux tâches
+                            </button>
+                            <button onClick={handleLogout} className="logout-button">
+                                Déconnexion
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                <div className="main">
+                    <ChatContainer userId={user._id} />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="app">
             <header>
@@ -135,6 +176,14 @@ export const App = () => {
                         </h1>
                     </div>
                     <div className="user-menu">
+                        <button onClick={toggleChat} style={{ backgroundColor: "var(--primary-color)", position: "relative" }}>
+                            💬 Chat
+                            {unreadMessagesCount > 0 && (
+                                <span className="chat-notification" title={`${unreadMessagesCount} message(s) non lu(s)`}>
+                                    {unreadMessagesCount}
+                                </span>
+                            )}
+                        </button>
                         <span>Bonjour, {user.username || "Utilisateur"}</span>
                         <button onClick={handleLogout} className="logout-button">
                             Déconnexion
@@ -150,8 +199,8 @@ export const App = () => {
                 </div>
 
                 <ul className="tasks">
-                    {tasks.map((task: TaskType) => (
-                        <Task key={task._id} task={task} onCheckboxClick={handleToggleChecked} onDeleteClick={handleDelete} />
+                    {tasks.map((task: Task) => (
+                        <TaskComponent key={task._id} task={task} onCheckboxClick={handleToggleChecked} onDeleteClick={handleDelete} />
                     ))}
                 </ul>
 

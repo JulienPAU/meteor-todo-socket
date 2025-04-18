@@ -1,0 +1,143 @@
+.task-form {
+    display: flex;
+    flex-direction: row;
+    margin: 16px;
+    gap: 10px;
+}
+
+.task-form > input {
+    flex-grow: 1;
+    box-sizing: border-box;
+    padding: 12px 15px;
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+.task-form > input:focus {
+    outline: 0;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.2);
+}
+
+.task-form > button {
+    min-width: 120px;
+    height: auto;
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 1.05em;
+}
+
+.task-form > button:hover {
+    background-color: var(--primary-color-light);
+}
+
+.filter {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+}
+
+.filter > button {
+    background-color: var(--secondary-color);
+    padding: 10px 16px;
+    font-size: 0.95em;
+    white-space: nowrap;
+}
+
+.filter > button:hover {
+    background-color: var(--secondary-color-dark);
+}
+
+.filter > button.selected {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.4);
+}
+
+.tasks {
+    list-style-type: none;
+    padding: 0 16px;
+    margin: 0;
+}
+
+.tasks > li {
+    display: flex;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+    background-color: var(--task-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+    flex-wrap: wrap;
+}
+
+.tasks > li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tasks > li.checked {
+    background-color: var(--task-completed-bg);
+    border-left: 4px solid var(--primary-color);
+}
+
+.tasks > li > span {
+    flex-grow: 1;
+    padding: 0 8px;
+    font-size: 1.1em;
+    color: var(--text-color);
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.text-completed {
+    text-decoration: line-through;
+    color: var(--text-color-light) !important;
+    font-style: italic;
+}
+
+.task-checkbox {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.tasks > li > button {
+    background-color: var(--error-color);
+    border-radius: 50%;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.tasks > li > button:hover {
+    background-color: #ff3046;
+}
+
+.empty-tasks-message {
+    text-align: center;
+    padding: clamp(20px, 5vh, 40px);
+    color: var(--text-color-light);
+    font-style: italic;
+}
+
+.empty-tasks-message p:first-child {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}

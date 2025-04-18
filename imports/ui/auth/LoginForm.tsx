@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { validateUsername, validatePassword } from "../../utils/validators";
 
 interface User {
     _id: string;
@@ -20,8 +21,15 @@ export const LoginForm = ({ setUser }: LoginFormProps) => {
         e.preventDefault();
         setError("");
 
-        if (!username || !password) {
-            setError("Veuillez remplir tous les champs");
+        const usernameValidation = validateUsername(username);
+        if (!usernameValidation.isValid) {
+            setError(usernameValidation.error || "Nom d'utilisateur invalide");
+            return;
+        }
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            setError(passwordValidation.error || "Mot de passe invalide");
             return;
         }
 
@@ -47,11 +55,11 @@ export const LoginForm = ({ setUser }: LoginFormProps) => {
             {error && <div className="error-message">{error}</div>}
 
             <div className="form-group">
-                <input type="text" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} />
+                <input type="text" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} minLength={3} maxLength={20} />
             </div>
 
             <div className="form-group">
-                <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
+                <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} minLength={6} maxLength={50} />
             </div>
 
             <button type="submit" disabled={isLoading}>
