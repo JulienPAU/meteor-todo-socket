@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { TasksCollection } from "/imports/api/TasksCollection";
 import { Meteor } from "meteor/meteor";
 
 export const TaskForm = () => {
@@ -12,7 +11,6 @@ export const TaskForm = () => {
 
         await Meteor.callAsync("tasks.insert", {
             text: text.trim(),
-            createdAt: new Date(),
         });
 
         setText("");

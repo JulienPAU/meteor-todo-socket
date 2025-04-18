@@ -1,3 +1,11 @@
 import { Mongo } from "meteor/mongo";
 
-export const TasksCollection = new Mongo.Collection("tasks");
+export interface Task {
+    _id?: string;
+    text: string;
+    userId: string;
+    createdAt: Date;
+    isChecked?: boolean;
+}
+
+export const TasksCollection = new Mongo.Collection<Task>("tasks");
