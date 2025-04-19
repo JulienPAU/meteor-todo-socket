@@ -7,12 +7,14 @@ Meteor.publish('onlineUsers', function () {
 
 
     return Meteor.users.find(
-        { _id: { $ne: this.userId } },
+        {
+            _id: { $ne: this.userId }
+        },
         {
             fields: {
                 username: 1,
                 profile: 1,
-                status: 1
+                status: 1,
             }
         }
     );

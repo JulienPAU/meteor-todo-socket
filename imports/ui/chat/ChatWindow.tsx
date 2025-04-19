@@ -4,6 +4,7 @@ import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
 import { Message } from "/imports/types/message";
 import { MessageInput } from "./MessageInput";
+import { decryptMessage } from "../../utils/validators";
 
 interface ChatWindowProps {
     selectedUserId: string;
@@ -52,6 +53,10 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
         return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     };
 
+    const getDecryptedContent = (message: Message): string => {
+        return decryptMessage(message.content);
+    };
+
     if (isLoading()) {
         return (
             <div className="chat-window">
@@ -80,7 +85,7 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
                 ) : (
                     messages.map((message: Message) => (
                         <div key={message._id} className={`message ${message.senderId === currentUserId ? "sent" : "received"}`}>
-                            {message.content}
+                            {getDecryptedContent(message)}
                             <div className="message-time">{formatMessageTime(message.createdAt)}</div>
                         </div>
                     ))

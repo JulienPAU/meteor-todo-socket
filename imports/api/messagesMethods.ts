@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { MessagesCollection } from "./MessagesCollection";
 import { MessageInsert } from "../types/message";
+import { encryptMessage } from "../utils/validators";
 
 Meteor.methods({
     async 'messages.send'({ receiverId, receiverUsername, content }: MessageInsert) {
@@ -15,12 +16,14 @@ Meteor.methods({
         const sender = await Meteor.users.findOneAsync(this.userId);
         const senderUsername = sender?.username || "Utilisateur inconnu";
 
+        const encryptedContent = encryptMessage(content);
+
         return MessagesCollection.insertAsync({
             senderId: this.userId,
             senderUsername,
             receiverId,
             receiverUsername,
-            content,
+            content: encryptedContent,
             createdAt: new Date(),
             read: false
         });

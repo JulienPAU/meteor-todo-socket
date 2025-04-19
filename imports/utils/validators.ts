@@ -2,6 +2,34 @@
  * Utilitaires de validation pour sécuriser les inputs
  */
 
+export const encryptMessage = (message: string): string => {
+    if (!message) return '';
+
+    const encrypted = Array.from(message).reduce(
+        (result, char, index) => {
+            const shifted = String.fromCharCode(char.charCodeAt(0) + (index % 7) + 3);
+            return result + shifted;
+        },
+        ''
+    );
+
+    return encrypted;
+};
+
+export const decryptMessage = (encrypted: string): string => {
+    if (!encrypted) return '';
+
+    const decrypted = Array.from(encrypted).reduce(
+        (result, char, index) => {
+            const unshifted = String.fromCharCode(char.charCodeAt(0) - (index % 7) - 3);
+            return result + unshifted;
+        },
+        ''
+    );
+
+    return decrypted;
+};
+
 export const validateUsername = (username: string): { isValid: boolean; error?: string } => {
     if (!username || username.trim() === '') {
         return { isValid: false, error: 'Le nom d\'utilisateur est requis' };
