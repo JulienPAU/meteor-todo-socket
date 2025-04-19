@@ -1,25 +1,15 @@
-FROM node:20 AS builder
+FROM node:20
 
 RUN curl https://install.meteor.com/ | sh
 
 WORKDIR /app
+
 COPY . .
+
+ENV METEOR_ALLOW_SUPERUSER=true
 
 RUN meteor npm install
 
-RUN meteor build ../output --directory --server-only
-
-FROM node:20
-
-WORKDIR /app
-
-COPY --from=builder /output/bundle ./bundle
-
-WORKDIR /app/bundle/programs/server
-RUN npm install
-
-ENV PORT=3000
 EXPOSE 3000
 
-WORKDIR /app/bundle
-CMD ["node", "main.js"]
+CMD ["meteor", "run", "--port", "3000", "--production"]
