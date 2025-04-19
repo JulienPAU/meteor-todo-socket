@@ -23,22 +23,10 @@ interface UsersListProps {
 
 export const UsersList = ({ currentUserId, selectedUserId, onSelectUser }: UsersListProps) => {
     const { users, unreadCounts } = useTracker(() => {
-        const messagePartners = MessagesCollection.find({
-            $or: [{ senderId: currentUserId }, { receiverId: currentUserId }],
-        })
-            .fetch()
-            .reduce((acc: string[], msg) => {
-                const partnerId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
-                if (!acc.includes(partnerId)) {
-                    acc.push(partnerId);
-                }
-                return acc;
-            }, []);
-
+        // Récupérer tous les utilisateurs sauf l'utilisateur actuel
         const usersList = Meteor.users
             .find({
                 _id: { $ne: currentUserId },
-                $or: [{ _id: { $in: messagePartners } }, { "status.online": true }],
             })
             .fetch();
 
