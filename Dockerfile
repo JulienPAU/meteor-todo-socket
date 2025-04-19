@@ -15,13 +15,15 @@ RUN meteor build --directory /build --server-only
 WORKDIR /build/bundle/programs/server
 RUN npm install
 
-ENV PORT=3000
+ENV PORT=8080
+
+RUN apt-get update && apt-get install -y dnsutils
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
 WORKDIR /build/bundle
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["/start.sh"]
