@@ -17,7 +17,7 @@ RUN npm install
 
 ENV PORT=8080
 
-RUN apt-get update && apt-get install -y dnsutils
+RUN apt-get update && apt-get install -y dnsutils netcat-openbsd
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
