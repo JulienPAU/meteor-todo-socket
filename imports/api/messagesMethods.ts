@@ -2,7 +2,9 @@ import { Meteor } from "meteor/meteor";
 import { MessagesCollection } from "./MessagesCollection";
 import { MessageInsert } from "../types/message";
 import { encryptMessage } from "../utils/validators";
-import { ObjectID } from "mongodb";
+import { MongoInternals } from 'meteor/mongo';
+
+const ObjectId = MongoInternals.NpmModules.mongodb.module.ObjectId;
 
 Meteor.methods({
     async 'messages.send'({ receiverId, receiverUsername, content }: MessageInsert) {
@@ -60,25 +62,29 @@ Meteor.methods({
             idToUse = messageId;
 
             if (typeof messageId === 'string' && messageId.length === 24) {
-                idToUse = new ObjectID(messageId);
+                try {
+                    idToUse = new ObjectId(messageId);
+                } catch (e) {
+                    console.log("Conversion en ObjectId impossible, utilisation de l'ID original");
+                }
             }
         } catch (error) {
-            console.error("Erreur lors de la conversion de l'ID:", error);
+            console.error("Erreur lors de la manipulation de l'ID:", error);
             throw new Meteor.Error("id-invalide", "L'identifiant du message n'est pas valide");
         }
 
         try {
-            const message = await MessagesCollection.findOneAsync({ _id: idToUse });
+            const message = await MessagesCollection.findOneAsync({ _id: idToUse.toString() });
 
             if (!message) {
                 throw new Meteor.Error("message-non-trouve", "Message non trouvé");
             }
 
             if (message.senderId !== this.userId && message.receiverId !== this.userId) {
-                throw new Meteor.Error("non-autorise", "Vous ne pouvez supprimer que vos propres messages");
+                throw new Meteor.Error("non-autorise", "Vous ne pouvez supprimer que vos propres messages ou les messages que vous avez reçus");
             }
 
-            return MessagesCollection.removeAsync({ _id: idToUse });
+            return MessagesCollection.removeAsync({ _id: idToUse.toString() });
         } catch (error) {
             console.error("Erreur lors de la suppression du message:", error);
             throw new Meteor.Error("erreur-suppression", "Erreur lors de la suppression du message");
