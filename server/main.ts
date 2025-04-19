@@ -2,12 +2,15 @@ import { Meteor } from "meteor/meteor";
 import { TasksCollection } from "/imports/api/TasksCollection";
 import { UsersCredentialsCollection } from "/imports/api/UsersCollection";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
+import { UserActivityCollection } from "/imports/api/UserActivityCollection";
 import "../imports/api/TasksPublication";
 import "../imports/api/tasksMethods";
 import "../imports/api/authMethods";
 import "../imports/api/MessagesPublication";
 import "../imports/api/messagesMethods";
 import "../imports/api/UsersPublication";
+import "../imports/api/userActivityMethods";
+import "../imports/api/UserActivityPublication";
 
 const hashPassword = (password: string): string => {
   return Array.from(password).reduce(
@@ -27,6 +30,12 @@ const isRailwayEnvironment = (): boolean => {
 
 const resetDatabase = async (): Promise<void> => {
   console.log("🔄 Réinitialisation de la base de données en cours...");
+
+  const activityCount = await UserActivityCollection.find().countAsync();
+  if (activityCount > 0) {
+    await UserActivityCollection.removeAsync({});
+    console.log(`✅ ${activityCount} activités utilisateur supprimées`);
+  }
 
   const messagesCount = await MessagesCollection.find().countAsync();
   if (messagesCount > 0) {
@@ -117,3 +126,6 @@ Meteor.startup(async () => {
     }
   }
 });
+
+
+

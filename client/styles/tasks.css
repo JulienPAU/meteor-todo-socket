@@ -36,6 +36,29 @@
     background-color: var(--primary-color-light);
 }
 
+.task-form-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.typing-indicator {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    color: var(--text-color-light);
+    text-align: left;
+    margin-left: 16px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .filter {
     display: flex;
     justify-content: center;
@@ -67,6 +90,7 @@
 }
 
 .tasks > li {
+    position: relative;
     display: flex;
     padding: 16px;
     border-radius: 8px;
@@ -76,6 +100,8 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease-in-out;
     flex-wrap: wrap;
+    justify-content: space-between;
+    cursor: pointer;
 }
 
 .tasks > li:hover {
@@ -88,6 +114,22 @@
     border-left: 4px solid var(--primary-color);
 }
 
+.tasks-edit-hint {
+    text-align: center;
+    margin: 10px 0 20px;
+    font-size: 0.9em;
+    color: var(--text-color-light);
+    padding: 8px;
+}
+
+.task-controls {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
 .tasks > li > span {
     flex-grow: 1;
     padding: 0 8px;
@@ -95,6 +137,7 @@
     color: var(--text-color);
     word-break: break-word;
     line-height: 1.4;
+    cursor: pointer;
 }
 
 .text-completed {
@@ -103,16 +146,35 @@
     font-style: italic;
 }
 
+.task-text {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.edit-hint {
+    display: none;
+}
+
+.editing-indicator {
+    display: block;
+    width: 100%;
+    font-size: 0.85em;
+    color: var(--primary-color);
+    margin-top: 4px;
+    padding-left: 8px;
+    animation: fadeIn 0.3s ease-in;
+}
+
 .task-checkbox {
     width: 20px;
     height: 20px;
-    margin-right: 10px;
     cursor: pointer;
     accent-color: var(--primary-color);
     flex-shrink: 0;
 }
 
-.tasks > li > button {
+.tasks > li button.delete-btn {
     background-color: var(--error-color);
     border-radius: 50%;
     padding: 0;
@@ -126,8 +188,48 @@
     flex-shrink: 0;
 }
 
-.tasks > li > button:hover {
+.tasks > li button.delete-btn:hover {
     background-color: #ff3046;
+}
+
+.edit-controls {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    align-items: center;
+}
+
+.edit-task-input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    font-size: 1em;
+    background: white;
+}
+
+.edit-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.edit-buttons button {
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 1em;
+}
+
+.edit-buttons button.save-btn {
+    background-color: var(--success-color, #4caf50);
+}
+
+.edit-buttons button.cancel-btn {
+    background-color: var(--error-color);
 }
 
 .empty-tasks-message {
@@ -140,4 +242,84 @@
 .empty-tasks-message p:first-child {
     font-size: 1.1em;
     margin-bottom: 8px;
+}
+
+.task-edit-area {
+    cursor: pointer;
+    width: 100%;
+    padding: 2px 0;
+}
+
+.task-edit-area:hover {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--text-color-light);
+}
+
+@media (max-width: 600px) {
+    .task-form {
+        flex-direction: column;
+    }
+
+    .task-form > input {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .task-form > button {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .tasks > li {
+        padding: 12px;
+    }
+
+    .tasks > li > span {
+        max-width: 75%;
+        font-size: 0.95em;
+        padding: 4px 0;
+    }
+
+    .filter {
+        flex-wrap: wrap;
+    }
+
+    .filter > button {
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .task-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .task-checkbox {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+    }
+
+    .tasks > li button.delete-btn {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        font-size: 0.9em;
+    }
+
+    .edit-hint {
+        font-size: 0.65em;
+        bottom: -2px;
+    }
+
+    .edit-controls {
+        flex-direction: column;
+    }
+
+    .edit-buttons {
+        align-self: flex-end;
+        margin-top: 5px;
+    }
 }

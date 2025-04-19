@@ -7,6 +7,7 @@ import { TaskForm } from "./TaskForm";
 import { LoginForm } from "./auth/LoginForm";
 import { RegisterForm } from "./auth/RegisterForm";
 import { ChatContainer } from "./chat/ChatContainer";
+import { Navbar } from "./Navbar";
 import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
@@ -17,7 +18,7 @@ export const App = () => {
     const [showChat, setShowChat] = useState(false);
 
     const isTasksLoading = useSubscribe("tasks");
-    const isMessagesLoading = useSubscribe("messages"); // Nécessaire pour les notifications de chat
+    const isMessagesLoading = useSubscribe("messages");
     const [hideCompleted, setHideCompleted] = useState(false);
 
     useEffect(() => {
@@ -48,7 +49,7 @@ export const App = () => {
         setShowChat(!showChat);
     };
 
-    const handleToggleChecked = ({ _id, isChecked }: Task) => Meteor.callAsync("tasks.toggleChecked", { _id, isChecked });
+    const handleToggleChecked = ({ _id, isChecked }: Task) => Meteor.callAsync("tasks.toggle", { _id, isChecked });
 
     const handleDelete = ({ _id }: Task) => Meteor.callAsync("tasks.delete", { _id });
 
@@ -87,13 +88,7 @@ export const App = () => {
     if (!user) {
         return (
             <div className="app">
-                <header>
-                    <div className="app-bar">
-                        <div className="app-header">
-                            <h1>📝️ To Do List</h1>
-                        </div>
-                    </div>
-                </header>
+                <Navbar user={null} title="📝️ To Do List" showChat={false} onToggleChat={() => {}} onLogout={() => {}} />
                 <div className="auth-container">
                     {showLogin ? (
                         <>
@@ -124,13 +119,7 @@ export const App = () => {
     if (isTasksLoading()) {
         return (
             <div className="app">
-                <header>
-                    <div className="app-bar">
-                        <div className="app-header">
-                            <h1>📝️ To Do List</h1>
-                        </div>
-                    </div>
-                </header>
+                <Navbar user={user} title="📝️ To Do List" showChat={false} onToggleChat={() => {}} onLogout={handleLogout} />
                 <div className="main">
                     <div className="loading-container">
                         <p>Chargement de vos tâches...</p>
@@ -143,21 +132,7 @@ export const App = () => {
     if (showChat && user) {
         return (
             <div className="app">
-                <header>
-                    <div className="app-bar">
-                        <div className="app-header">
-                            <h1>💬 Chat</h1>
-                        </div>
-                        <div className="user-menu">
-                            <button onClick={toggleChat} className="back-button" style={{ backgroundColor: "var(--secondary-color)" }}>
-                                Retour aux tâches
-                            </button>
-                            <button onClick={handleLogout} className="logout-button">
-                                Déconnexion
-                            </button>
-                        </div>
-                    </div>
-                </header>
+                <Navbar user={user} title="💬 Chat" showChat={true} onToggleChat={toggleChat} onLogout={handleLogout} />
                 <div className="main">
                     <ChatContainer userId={user._id} />
                 </div>
@@ -167,35 +142,12 @@ export const App = () => {
 
     return (
         <div className="app">
-            <header>
-                <div className="app-bar">
-                    <div className="app-header">
-                        <h1>
-                            📝️ To Do List
-                            {pendingTasksTitle}
-                        </h1>
-                    </div>
-                    <div className="user-menu">
-                        <button onClick={toggleChat} style={{ backgroundColor: "var(--primary-color)", position: "relative" }}>
-                            💬 Chat
-                            {unreadMessagesCount > 0 && (
-                                <span className="chat-notification" title={`${unreadMessagesCount} message(s) non lu(s)`}>
-                                    {unreadMessagesCount}
-                                </span>
-                            )}
-                        </button>
-                        <span>Bonjour, {user.username || "Utilisateur"}</span>
-                        <button onClick={handleLogout} className="logout-button">
-                            Déconnexion
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Navbar user={user} title={`📝️ To Do List${pendingTasksTitle}`} unreadMessagesCount={unreadMessagesCount} showChat={false} onToggleChat={toggleChat} onLogout={handleLogout} />
             <div className="main">
                 <TaskForm />
 
                 <div className="filter">
-                    <button onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? "Afficher tout" : "Masquer les terminées"}</button>
+                    <button onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? "Afficher tout" : "Masquer les tâches terminées"}</button>
                 </div>
 
                 <ul className="tasks">
@@ -203,6 +155,10 @@ export const App = () => {
                         <TaskComponent key={task._id} task={task} onCheckboxClick={handleToggleChecked} onDeleteClick={handleDelete} />
                     ))}
                 </ul>
+
+                <div className="tasks-edit-hint">
+                    <em>Astuce : Cliquez sur le texte d'une tâche pour la modifier</em>
+                </div>
 
                 {tasks.length === 0 && (
                     <div className="empty-tasks-message">

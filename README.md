@@ -5,10 +5,11 @@ Cette application Todo est construite avec Meteor.js, React et TypeScript. Elle 
 ## Fonctionnalités
 
 -   🔐 **Authentification** : Système d'authentification personnalisé avec stockage sécurisé des mots de passe
--   📝 **Gestion des tâches** : Création, marquage comme terminé et suppression de tâches
+-   📝 **Gestion des tâches** : Création, modification, marquage comme terminé et suppression de tâches
 -   👤 **Tâches par utilisateur** : Chaque utilisateur ne voit que ses propres tâches
 -   💬 **Chat en temps réel** : Messagerie instantanée entre utilisateurs
 -   🔔 **Notifications** : Alertes pour les messages non lus
+-   👀 **Indicateurs d'activité** : Voir quand les autres utilisateurs sont en train d'écrire ou de modifier une tâche
 -   📱 **Interface responsive** : Design adapté à différentes tailles d'écran
 -   🔍 **Filtrage** : Possibilité de filtrer les tâches terminées
 -   🛡️ **Validation des données** : Sécurisation des inputs utilisateur côté client et serveur
@@ -62,15 +63,18 @@ meteor-todo-socket/
 │
 ├── imports/             # Modules importés par le client et le serveur
 │   ├── api/             # API et collections
-│   │   ├── authMethods.ts             # Méthodes d'authentification
-│   │   ├── MessagesCollection.ts      # Collection de messages
-│   │   ├── messagesMethods.ts         # Méthodes pour manipuler les messages
-│   │   ├── MessagesPublication.ts     # Publication des messages
-│   │   ├── TasksCollection.ts         # Collection de tâches
-│   │   ├── tasksMethods.ts            # Méthodes pour manipuler les tâches
-│   │   ├── TasksPublication.ts        # Publications de tâches
-│   │   ├── UsersCollection.ts         # Collection d'utilisateurs
-│   │   └── UsersPublication.ts        # Publication des utilisateurs
+│   │   ├── authMethods.ts                # Méthodes d'authentification
+│   │   ├── MessagesCollection.ts         # Collection de messages
+│   │   ├── messagesMethods.ts            # Méthodes pour manipuler les messages
+│   │   ├── MessagesPublication.ts        # Publication des messages
+│   │   ├── TasksCollection.ts            # Collection de tâches
+│   │   ├── tasksMethods.ts               # Méthodes pour manipuler les tâches
+│   │   ├── TasksPublication.ts           # Publications de tâches
+│   │   ├── UsersCollection.ts            # Collection d'utilisateurs
+│   │   ├── UsersPublication.ts           # Publication des utilisateurs
+│   │   ├── UserActivityCollection.ts     # Collection pour l'activité des utilisateurs
+│   │   ├── userActivityMethods.ts        # Méthodes pour l'activité des utilisateurs
+│   │   └── UserActivityPublication.ts    # Publication des activités utilisateur
 │   │
 │   ├── types/           # Types TypeScript
 │   │   ├── message.ts           # Types pour les messages
@@ -118,12 +122,18 @@ meteor-todo-socket/
 2. **Gestion des tâches** :
 
     - Ajoutez une tâche en entrant du texte dans la zone de saisie et en cliquant sur "Ajouter"
+    - Modifiez une tâche en cliquant sur son texte
     - Marquez une tâche comme terminée en cliquant sur la case à cocher
     - Supprimez une tâche en cliquant sur le bouton × à droite
 
 3. **Filtrage** :
 
     - Utilisez le bouton "Masquer les terminées" pour filtrer les tâches
+
+4. **Collaboration en temps réel** :
+
+    - Voyez lorsque d'autres utilisateurs sont en train d'écrire une nouvelle tâche
+    - Voyez lorsque d'autres utilisateurs sont en train de modifier une tâche
 
 ### Système de chat
 
@@ -152,6 +162,14 @@ Cette application utilise un système d'authentification personnalisé basé sur
 2. Les informations d'authentification sont stockées séparément des données utilisateur
 3. Un token est généré à la connexion et stocké dans le localStorage
 4. Ce token est utilisé pour authentifier les requêtes ultérieures
+
+## Système d'indicateurs d'activité en temps réel
+
+L'application utilise un système d'indicateurs d'activité qui permet aux utilisateurs de voir :
+
+1. Quand quelqu'un est en train d'ajouter une nouvelle tâche
+2. Quand quelqu'un est en train de modifier une tâche spécifique
+3. Ces indicateurs fonctionnent même si plusieurs utilisateurs sont connectés avec le même compte
 
 ## Sécurisation des données utilisateur
 
