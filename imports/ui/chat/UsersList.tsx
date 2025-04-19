@@ -23,7 +23,6 @@ interface UsersListProps {
 
 export const UsersList = ({ currentUserId, selectedUserId, onSelectUser }: UsersListProps) => {
     const { users, unreadCounts } = useTracker(() => {
-        // Récupérer tous les utilisateurs sauf l'utilisateur actuel
         const usersList = Meteor.users
             .find({
                 _id: { $ne: currentUserId },

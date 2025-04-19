@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
 import { Message } from "/imports/types/message";
 import { MessageInput } from "./MessageInput";
 import { decryptMessage } from "../../utils/validators";
+import { ConfirmationModal } from "../ConfirmationModal";
 
 interface ChatWindowProps {
     selectedUserId: string;
@@ -14,6 +15,8 @@ interface ChatWindowProps {
 
 export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: ChatWindowProps) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
     const isLoading = useSubscribe("conversationMessages", selectedUserId);
 
@@ -57,6 +60,29 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
         return decryptMessage(message.content);
     };
 
+    const handleDeleteClick = (messageId: string | undefined) => {
+        if (!messageId) return;
+        setMessageToDelete(messageId);
+        setShowConfirmation(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!messageToDelete) return;
+
+        try {
+            await Meteor.callAsync("messages.delete", messageToDelete);
+            setShowConfirmation(false);
+            setMessageToDelete(null);
+        } catch (error) {
+            console.error("Erreur lors de la suppression du message:", error);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowConfirmation(false);
+        setMessageToDelete(null);
+    };
+
     if (isLoading()) {
         return (
             <div className="chat-window">
@@ -86,7 +112,14 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
                     messages.map((message: Message) => (
                         <div key={message._id} className={`message ${message.senderId === currentUserId ? "sent" : "received"}`}>
                             {getDecryptedContent(message)}
-                            <div className="message-time">{formatMessageTime(message.createdAt)}</div>
+                            <div className="message-actions">
+                                <div className="message-time">{formatMessageTime(message.createdAt)}</div>
+                                {message.senderId === currentUserId && (
+                                    <button className="delete-message-btn" onClick={() => handleDeleteClick(message._id)} title="Supprimer le message">
+                                        &times;
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     ))
                 )}
@@ -94,6 +127,8 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
             </div>
 
             <MessageInput receiverId={selectedUserId} receiverUsername={selectedUsername} />
+
+            <ConfirmationModal isOpen={showConfirmation} message="Êtes-vous sûr de vouloir supprimer ce message ?" onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} />
         </div>
     );
 };
