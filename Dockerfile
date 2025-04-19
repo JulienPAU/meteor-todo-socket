@@ -16,11 +16,12 @@ WORKDIR /build/bundle/programs/server
 RUN npm install
 
 ENV PORT=3000
-ENV MONGO_URL=mongodb://localhost:27017/meteor
-ENV ROOT_URL=http://localhost:3000
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 WORKDIR /build/bundle
 
 EXPOSE 3000
 
-CMD ["node", "main.js"]
+CMD ["/start.sh"]
