@@ -17,13 +17,8 @@ RUN npm install
 
 ENV PORT=8080
 
-RUN apt-get update && apt-get install -y dnsutils netcat-openbsd
-
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
 WORKDIR /build/bundle
 
 EXPOSE 8080
 
-CMD ["/start.sh"]
+CMD ["node", "main.js"]

@@ -210,6 +210,16 @@
     color: #666;
     padding: 20px;
     text-align: center;
+    width: 100%;
+}
+
+.chat-main-area {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
 }
 
 .chat-tab {

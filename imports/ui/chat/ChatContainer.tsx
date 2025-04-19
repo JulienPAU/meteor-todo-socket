@@ -36,9 +36,11 @@ export const ChatContainer = ({ userId }: ChatContainerProps) => {
             {selectedUser ? (
                 <ChatWindow selectedUserId={selectedUser.id} selectedUsername={selectedUser.username} currentUserId={userId} />
             ) : (
-                <div className="no-conversation">
-                    <h3>Bienvenue dans le chat</h3>
-                    <p>Sélectionnez un utilisateur pour commencer une conversation.</p>
+                <div className="chat-main-area">
+                    <div className="no-conversation">
+                        <h3>Bienvenue dans le chat</h3>
+                        <p>Sélectionnez un utilisateur pour commencer une conversation.</p>
+                    </div>
                 </div>
             )}
         </div>
