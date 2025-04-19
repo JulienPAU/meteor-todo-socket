@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { TasksCollection } from "/imports/api/TasksCollection";
 import { UsersCredentialsCollection } from "/imports/api/UsersCollection";
+import { MessagesCollection } from "/imports/api/MessagesCollection";
 import "../imports/api/TasksPublication";
 import "../imports/api/tasksMethods";
 import "../imports/api/authMethods";
@@ -18,6 +19,42 @@ const hashPassword = (password: string): string => {
 const SEED_USERNAME = "demo";
 const SEED_PASSWORD = "password123";
 
+const isRailwayEnvironment = (): boolean => {
+  return !!process.env.RAILWAY_ENVIRONMENT ||
+    !!process.env.RAILWAY_SERVICE_ID ||
+    !!process.env.RAILWAY_PROJECT_ID;
+};
+
+const resetDatabase = async (): Promise<void> => {
+  console.log("🔄 Réinitialisation de la base de données en cours...");
+
+  const messagesCount = await MessagesCollection.find().countAsync();
+  if (messagesCount > 0) {
+    await MessagesCollection.removeAsync({});
+    console.log(`✅ ${messagesCount} messages supprimés`);
+  }
+
+  const tasksCount = await TasksCollection.find().countAsync();
+  if (tasksCount > 0) {
+    await TasksCollection.removeAsync({});
+    console.log(`✅ ${tasksCount} tâches supprimées`);
+  }
+
+  const usersCount = await Meteor.users.find({ username: { $ne: SEED_USERNAME } }).countAsync();
+  if (usersCount > 0) {
+    await Meteor.users.removeAsync({ username: { $ne: SEED_USERNAME } });
+    console.log(`✅ ${usersCount} utilisateurs supprimés`);
+  }
+
+  const credentialsCount = await UsersCredentialsCollection.find({ username: { $ne: SEED_USERNAME } }).countAsync();
+  if (credentialsCount > 0) {
+    await UsersCredentialsCollection.removeAsync({ username: { $ne: SEED_USERNAME } });
+    console.log(`✅ ${credentialsCount} identifications supprimées`);
+  }
+
+  console.log("🎉 Réinitialisation de la base de données terminée!");
+};
+
 const insertTask = (taskText: string, userId: string) =>
   TasksCollection.insertAsync({
     text: taskText,
@@ -26,6 +63,10 @@ const insertTask = (taskText: string, userId: string) =>
   });
 
 Meteor.startup(async () => {
+  if (isRailwayEnvironment() && (process.env.RESET_DATABASE === "true" || process.env.RESET_DATABASE === "1")) {
+    await resetDatabase();
+  }
+
   const existingUser = await Meteor.users.findOneAsync({ username: SEED_USERNAME });
   const existingCredentials = await UsersCredentialsCollection.findOneAsync({ username: SEED_USERNAME });
 
