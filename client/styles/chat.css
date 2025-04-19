@@ -171,13 +171,13 @@
 }
 
 .delete-message-btn {
-    background-color: transparent;
-    color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(0, 0, 0, 0.15);
+    color: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 14px;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,31 +186,20 @@
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: none;
-    opacity: 0;
-}
-
-.message:hover .delete-message-btn {
-    opacity: 1;
 }
 
 .message.sent .delete-message-btn {
-    color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 .message.sent .delete-message-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    transform: none;
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
 }
 
-.message.received .delete-message-btn {
-    color: rgba(0, 0, 0, 0.5);
-}
-
-.message.received .delete-message-btn:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #000;
-    transform: none;
+.message-content {
+    word-break: break-word;
 }
 
 .message-input-container {

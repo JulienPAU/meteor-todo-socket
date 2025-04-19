@@ -111,7 +111,7 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
                 ) : (
                     messages.map((message: Message) => (
                         <div key={message._id} className={`message ${message.senderId === currentUserId ? "sent" : "received"}`}>
-                            {getDecryptedContent(message)}
+                            <div className="message-content">{getDecryptedContent(message)}</div>
                             <div className="message-actions">
                                 <div className="message-time">{formatMessageTime(message.createdAt)}</div>
                                 {message.senderId === currentUserId && (
