@@ -1,325 +1,335 @@
 .task-form {
-    display: flex;
-    flex-direction: row;
-    margin: 16px;
-    gap: 10px;
+  display: flex;
+  flex-direction: row;
+  margin: 16px;
+  gap: 10px;
 }
 
 .task-form > input {
-    flex-grow: 1;
-    box-sizing: border-box;
-    padding: 12px 15px;
-    background: transparent;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    width: 100%;
-    font-size: 1em;
-    transition: border-color 0.3s;
+  flex-grow: 1;
+  box-sizing: border-box;
+  padding: 12px 15px;
+  background: transparent;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 1em;
+  transition: border-color 0.3s;
 }
 
 .task-form > input:focus {
-    outline: 0;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.2);
+  outline: 0;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.2);
 }
 
 .task-form > button {
-    min-width: 120px;
-    height: auto;
-    background-color: var(--primary-color);
-    border-radius: 8px;
-    padding: 12px 20px;
-    font-size: 1.05em;
+  min-width: 120px;
+  height: auto;
+  background-color: var(--primary-color);
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1.05em;
 }
 
 .task-form > button:hover {
-    background-color: var(--primary-color-light);
+  background-color: var(--primary-color-light);
 }
 
 .task-form-container {
-    position: relative;
-    margin-bottom: 20px;
+  position: relative;
+  margin-bottom: 20px;
 }
 
 .typing-indicator {
-    padding: 5px 10px;
-    font-size: 0.9em;
-    color: var(--text-color-light);
-    text-align: left;
-    margin-left: 16px;
-    animation: fadeIn 0.3s ease-in;
+  padding: 5px 10px;
+  font-size: 0.9em;
+  color: var(--text-color-light);
+  text-align: left;
+  margin-left: 16px;
+  animation: fadeIn 0.3s ease-in;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .filter {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
 }
 
 .filter > button {
-    background-color: var(--secondary-color);
-    padding: 10px 16px;
-    font-size: 0.95em;
-    white-space: nowrap;
+  background-color: var(--secondary-color);
+  padding: 10px 16px;
+  font-size: 0.95em;
+  white-space: nowrap;
 }
 
 .filter > button:hover {
-    background-color: var(--secondary-color-dark);
+  background-color: var(--secondary-color-dark);
 }
 
 .filter > button.selected {
-    background-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.4);
+  background-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.4);
 }
 
 .tasks {
-    list-style-type: none;
-    padding: 0 16px;
-    margin: 0;
+  list-style-type: none;
+  padding: 0 16px;
+  margin: 0;
 }
 
 .tasks > li {
-    position: relative;
-    display: flex;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    align-items: center;
-    background-color: var(--task-bg);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease-in-out;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    cursor: pointer;
+  position: relative;
+  display: flex;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+  background-color: var(--task-bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  cursor: pointer;
 }
 
 .tasks > li:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .tasks > li.checked {
-    background-color: var(--task-completed-bg);
-    border-left: 4px solid var(--primary-color);
+  background-color: var(--task-completed-bg);
+  border-left: 4px solid var(--primary-color);
 }
 
 .tasks-edit-hint {
-    text-align: center;
-    margin: 10px 0 20px;
-    font-size: 0.9em;
-    color: var(--text-color-light);
-    padding: 8px;
+  text-align: center;
+  margin: 10px 0 20px;
+  font-size: 0.9em;
+  color: var(--text-color-light);
+  padding: 8px;
 }
 
 .task-controls {
-    display: flex;
-    align-items: center;
-    margin-left: 10px;
-    flex-shrink: 0;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  flex-shrink: 0;
+  gap: 8px;
 }
 
 .tasks > li > span {
-    flex-grow: 1;
-    padding: 0 8px;
-    font-size: 1.1em;
-    color: var(--text-color);
-    word-break: break-word;
-    line-height: 1.4;
-    cursor: pointer;
+  flex-grow: 1;
+  padding: 0 8px;
+  font-size: 1.1em;
+  color: var(--text-color);
+  word-break: break-word;
+  line-height: 1.4;
+  cursor: pointer;
 }
 
 .text-completed {
-    text-decoration: line-through;
-    color: var(--text-color-light) !important;
-    font-style: italic;
+  text-decoration: line-through;
+  color: var(--text-color-light) !important;
+  font-style: italic;
 }
 
 .task-text {
-    position: relative;
-    display: inline-block;
-    width: 100%;
+  position: relative;
+  display: inline-block;
+  width: 100%;
 }
 
 .edit-hint {
-    display: none;
+  display: none;
 }
 
 .editing-indicator {
-    display: block;
-    width: 100%;
-    font-size: 0.85em;
-    color: var(--primary-color);
-    margin-top: 4px;
-    padding-left: 8px;
-    animation: fadeIn 0.3s ease-in;
+  display: block;
+  width: 100%;
+  font-size: 0.85em;
+  color: var(--primary-color);
+  margin-top: 4px;
+  padding-left: 8px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.editing-indicator.self-editing {
+  border-left: 3px solid var(--primary-color);
+  background-color: rgba(var(--primary-color-rgb), 0.15);
+  color: var(--primary-color);
+  border-radius: 4px;
+  padding: 0.7rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .task-checkbox {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: var(--primary-color);
-    flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+  flex-shrink: 0;
 }
 
 .tasks > li button.delete-btn {
-    background-color: var(--error-color);
-    border-radius: 50%;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-    line-height: 1;
-    flex-shrink: 0;
+  background-color: var(--error-color);
+  border-radius: 50%;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .tasks > li button.delete-btn:hover {
-    background-color: #ff3046;
+  background-color: #ff3046;
 }
 
 .edit-controls {
-    display: flex;
-    width: 100%;
-    gap: 10px;
-    align-items: center;
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  align-items: center;
 }
 
 .edit-task-input {
-    flex-grow: 1;
-    padding: 8px 12px;
-    border: 2px solid var(--primary-color);
-    border-radius: 6px;
-    font-size: 1em;
-    background: white;
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 2px solid var(--primary-color);
+  border-radius: 6px;
+  font-size: 1em;
+  background: white;
 }
 
 .edit-buttons {
-    display: flex;
-    gap: 5px;
+  display: flex;
+  gap: 5px;
 }
 
 .edit-buttons button {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    font-size: 1em;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1em;
 }
 
 .edit-buttons button.save-btn {
-    background-color: var(--success-color, #4caf50);
+  background-color: var(--success-color, #4caf50);
 }
 
 .edit-buttons button.cancel-btn {
-    background-color: var(--error-color);
+  background-color: var(--error-color);
 }
 
 .empty-tasks-message {
-    text-align: center;
-    padding: clamp(20px, 5vh, 40px);
-    color: var(--text-color-light);
-    font-style: italic;
+  text-align: center;
+  padding: clamp(20px, 5vh, 40px);
+  color: var(--text-color-light);
+  font-style: italic;
 }
 
 .empty-tasks-message p:first-child {
-    font-size: 1.1em;
-    margin-bottom: 8px;
+  font-size: 1.1em;
+  margin-bottom: 8px;
 }
 
 .task-edit-area {
-    cursor: pointer;
-    width: 100%;
-    padding: 2px 0;
+  cursor: pointer;
+  width: 100%;
+  padding: 2px 0;
 }
 
 .task-edit-area:hover {
-    text-decoration: underline;
-    text-decoration-style: dotted;
-    text-decoration-color: var(--text-color-light);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-color-light);
 }
 
 @media (max-width: 600px) {
-    .task-form {
-        flex-direction: column;
-    }
+  .task-form {
+    flex-direction: column;
+  }
 
-    .task-form > input {
-        margin-bottom: 10px;
-        font-size: 16px;
-    }
+  .task-form > input {
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
 
-    .task-form > button {
-        width: 100%;
-        min-width: auto;
-    }
+  .task-form > button {
+    width: 100%;
+    min-width: auto;
+  }
 
-    .tasks > li {
-        padding: 12px;
-    }
+  .tasks > li {
+    padding: 12px;
+  }
 
-    .tasks > li > span {
-        max-width: 75%;
-        font-size: 0.95em;
-        padding: 4px 0;
-    }
+  .tasks > li > span {
+    max-width: 75%;
+    font-size: 0.95em;
+    padding: 4px 0;
+  }
 
-    .filter {
-        flex-wrap: wrap;
-    }
+  .filter {
+    flex-wrap: wrap;
+  }
 
-    .filter > button {
-        flex: 1;
-        min-width: 100px;
-    }
+  .filter > button {
+    flex: 1;
+    min-width: 100px;
+  }
 
-    .task-controls {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
+  .task-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
 
-    .task-checkbox {
-        width: 18px;
-        height: 18px;
-        min-width: 18px;
-    }
+  .task-checkbox {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+  }
 
-    .tasks > li button.delete-btn {
-        width: 22px;
-        height: 22px;
-        min-width: 22px;
-        font-size: 0.9em;
-    }
+  .tasks > li button.delete-btn {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    font-size: 0.9em;
+  }
 
-    .edit-hint {
-        font-size: 0.65em;
-        bottom: -2px;
-    }
+  .edit-hint {
+    font-size: 0.65em;
+    bottom: -2px;
+  }
 
-    .edit-controls {
-        flex-direction: column;
-    }
+  .edit-controls {
+    flex-direction: column;
+  }
 
-    .edit-buttons {
-        align-self: flex-end;
-        margin-top: 5px;
-    }
+  .edit-buttons {
+    align-self: flex-end;
+    margin-top: 5px;
+  }
 }

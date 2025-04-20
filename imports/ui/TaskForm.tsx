@@ -6,21 +6,41 @@ import { validateTaskText } from "../utils/validators";
 import { UserActivityCollection, UserActivity } from "../api/UserActivityCollection";
 import "../types/meteor-extensions";
 
-export const TaskForm = () => {
+interface TaskFormProps {
+    groupId?: string;
+}
+
+export const TaskForm = ({ groupId }: TaskFormProps) => {
     const [text, setText] = useState("");
     const [error, setError] = useState("");
     const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = useTracker(() => Meteor.user());
+    const currentSessionId = Meteor.connection?._lastSessionId || "";
 
     const userActivities = useTracker(() => {
-        const handle = Meteor.subscribe("userActivity");
-        const activities = UserActivityCollection.find({ action: "typing" }, { sort: { timestamp: -1 } }).fetch();
+        if (groupId) {
+            const handle = Meteor.subscribe("groupActivity", groupId);
+            return UserActivityCollection.find(
+                {
+                    action: "typing",
+                    groupId,
+                },
+                { sort: { timestamp: -1 } }
+            ).fetch();
+        }
 
-        return activities;
-    });
+        const handle = Meteor.subscribe("userActivity");
+        return UserActivityCollection.find(
+            {
+                action: "typing",
+                groupId: { $exists: false },
+            },
+            { sort: { timestamp: -1 } }
+        ).fetch();
+    }, [groupId]);
 
     const otherUserTyping = userActivities.filter((activity: UserActivity) => {
-        return activity.sessionId !== (Meteor.connection?._lastSessionId || "");
+        return activity.sessionId !== currentSessionId && activity.userId !== Meteor.userId();
     });
 
     const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,11 +52,13 @@ export const TaskForm = () => {
         }
 
         if (newText.trim() && currentUser) {
-            Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "typing");
-
-            typingTimeout.current = setTimeout(() => {
-                Meteor.call("userActivity.clear");
-            }, 2000);
+            if (groupId) {
+                Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "typing", undefined, groupId);
+            } else {
+                Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "typing");
+            }
+        } else {
+            Meteor.call("userActivity.clear", "typing");
         }
     };
 
@@ -52,18 +74,20 @@ export const TaskForm = () => {
 
         const taskData: TaskInsert = {
             text: text.trim(),
+            groupId,
         };
 
         try {
             if (typingTimeout.current) {
                 clearTimeout(typingTimeout.current);
             }
-            Meteor.call("userActivity.clear");
+            Meteor.call("userActivity.clear", "typing");
 
             await Meteor.callAsync("tasks.insert", taskData);
             setText("");
         } catch (err: any) {
-            setError(err.reason || "Erreur lors de l'ajout de la tâche");
+            console.error("Erreur lors de l'ajout de la tâche:", err);
+            setError((err as { reason?: string }).reason || "Erreur lors de l'ajout de la tâche");
         }
     };
 
@@ -72,23 +96,60 @@ export const TaskForm = () => {
             if (typingTimeout.current) {
                 clearTimeout(typingTimeout.current);
             }
-            Meteor.call("userActivity.clear");
+            Meteor.call("userActivity.clear", "typing");
         };
     }, []);
+
+    const getTypingMessage = () => {
+        if (otherUserTyping.length === 0) return null;
+
+        if (otherUserTyping.length === 1) {
+            return (
+                <em>
+                    <span
+                        style={{
+                            color: groupId && otherUserTyping[0].color ? otherUserTyping[0].color : undefined,
+                        }}
+                    >
+                        {otherUserTyping[0].username || "Quelqu'un"}
+                    </span>{" "}
+                    est en train d'écrire...
+                </em>
+            );
+        }
+
+        return (
+            <em>
+                <span
+                    style={{
+                        color: groupId && otherUserTyping[0].color ? otherUserTyping[0].color : undefined,
+                    }}
+                >
+                    {otherUserTyping[0].username}
+                </span>{" "}
+                et {otherUserTyping.length - 1} autre(s) sont en train d'écrire...
+            </em>
+        );
+    };
 
     return (
         <div className="task-form-container">
             <form className="task-form" onSubmit={handleSubmit}>
                 {error && <div className="error-message">{error}</div>}
 
-                <input type="text" placeholder="Saisissez une nouvelle tâche" value={text} onChange={handleTextChange} maxLength={280} />
+                <input type="text" placeholder={groupId ? "Ajouter une nouvelle tâche au groupe" : "Saisissez une nouvelle tâche personnelle"} value={text} onChange={handleTextChange} maxLength={280} />
 
                 <button type="submit">Ajouter</button>
             </form>
 
             {otherUserTyping.length > 0 && (
-                <div className="typing-indicator">
-                    <em>Quelqu'un est en train d'écrire...</em>
+                <div
+                    className="typing-indicator"
+                    style={{
+                        borderLeft: groupId && otherUserTyping[0].color ? `3px solid ${otherUserTyping[0].color}` : undefined,
+                    }}
+                >
+                    {getTypingMessage()}
                 </div>
             )}
         </div>

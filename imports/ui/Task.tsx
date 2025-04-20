@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-import { Task as TaskType } from "/imports/types/task";
+import type { Task as TaskType } from "/imports/types/task";
 import { ConfirmationModal } from "./ConfirmationModal";
-import { UserActivityCollection } from "../api/UserActivityCollection";
+import { UserActivityCollection, type UserActivity } from "../api/UserActivityCollection";
 import "../types/meteor-extensions";
 
 interface TaskProps {
     task: TaskType;
     onCheckboxClick: (task: TaskType) => void;
     onDeleteClick: (task: TaskType) => void;
+    showCreator?: boolean;
+    groupId?: string;
 }
 
-export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
+export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupId }: TaskProps) => {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(task.text);
@@ -20,14 +22,62 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
     const editTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = Meteor.user();
 
+    useEffect(() => {
+        return () => {
+            if (Meteor.connection?._lastSessionId) {
+                if (groupId) {
+                    Meteor.call("userActivity.clear", "editing");
+                } else {
+                    Meteor.call("userActivity.clear");
+                }
+            }
+        };
+    }, [groupId]);
+
     const userEditingThisTask = useTracker(() => {
+        if (groupId) {
+            const handle = Meteor.subscribe("groupActivity", groupId);
+            return UserActivityCollection.find({
+                action: "editing",
+                targetId: task._id,
+                sessionId: { $ne: Meteor.connection?._lastSessionId || "" },
+                groupId,
+            }).fetch();
+        }
+
         const handle = Meteor.subscribe("userActivity");
         return UserActivityCollection.findOne({
             action: "editing",
             targetId: task._id,
             sessionId: { $ne: Meteor.connection?._lastSessionId || "" },
+            groupId: { $exists: false },
         });
-    });
+    }, [task._id, groupId]);
+
+    const currentUserEditing = useTracker(() => {
+        if (groupId) return null;
+        const sessionId = Meteor.connection?._lastSessionId;
+        if (!sessionId) return null;
+
+        const handle = Meteor.subscribe("userActivity");
+        return UserActivityCollection.findOne({
+            action: "editing",
+            targetId: task._id,
+            userId: Meteor.userId() || undefined,
+            groupId: { $exists: false },
+        });
+    }, [task._id, groupId]);
+
+    const userSelections = useTracker(() => {
+        if (!groupId) return [];
+
+        const handle = Meteor.subscribe("groupActivity", groupId);
+        return UserActivityCollection.find({
+            action: "selection",
+            targetId: task._id,
+            sessionId: { $ne: Meteor.connection?._lastSessionId || "" },
+        }).fetch();
+    }, [task._id, groupId]);
 
     const handleDeleteClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -51,7 +101,17 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
         setEditText(task.text);
 
         if (currentUser) {
-            Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "editing", task._id);
+            if (groupId) {
+                Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "editing", task._id, groupId);
+            } else {
+                Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "editing", task._id);
+            }
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            handleTaskTextClick(e as unknown as React.MouseEvent);
         }
     };
 
@@ -65,13 +125,25 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
     const cancelEditing = () => {
         setIsEditing(false);
 
-        Meteor.call("userActivity.clear");
+        if (Meteor.connection?._lastSessionId) {
+            if (groupId) {
+                Meteor.call("userActivity.clear", "editing");
+            } else {
+                Meteor.call("userActivity.clear");
+            }
+        }
     };
 
     const saveEdit = async () => {
         if (editText.trim() !== task.text) {
             try {
-                Meteor.call("userActivity.clear");
+                if (Meteor.connection?._lastSessionId) {
+                    if (groupId) {
+                        Meteor.call("userActivity.clear", "editing");
+                    } else {
+                        Meteor.call("userActivity.clear");
+                    }
+                }
 
                 await Meteor.callAsync("tasks.updateText", {
                     _id: task._id,
@@ -85,7 +157,13 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
                 console.error("Erreur lors de la mise à jour de la tâche:", error);
             }
         } else {
-            Meteor.call("userActivity.clear");
+            if (Meteor.connection?._lastSessionId) {
+                if (groupId) {
+                    Meteor.call("userActivity.clear", "editing");
+                } else {
+                    Meteor.call("userActivity.clear");
+                }
+            }
         }
         setIsEditing(false);
     };
@@ -95,7 +173,11 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
         setEditText(newText);
 
         if (currentUser) {
-            Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "editing", task._id);
+            if (groupId) {
+                Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "editing", task._id, groupId);
+            } else {
+                Meteor.call("userActivity.setTyping", currentUser.username || "Quelqu'un", "editing", task._id);
+            }
         }
     };
 
@@ -104,6 +186,21 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
             saveEdit();
         } else if (e.key === "Escape") {
             cancelEditing();
+        }
+    };
+
+    const handleInputSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
+        if (!groupId || !currentUser) return;
+
+        const target = e.target as HTMLInputElement;
+        const start = target.selectionStart || 0;
+        const end = target.selectionEnd || 0;
+
+        if (start !== end) {
+            Meteor.call("userActivity.setSelection", groupId, task._id, {
+                start,
+                end,
+            });
         }
     };
 
@@ -117,10 +214,57 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
         return () => {
             if (editTimeoutRef.current) {
                 clearTimeout(editTimeoutRef.current);
-                Meteor.call("userActivity.clear");
+                if (groupId) {
+                    Meteor.call("userActivity.clear", "editing");
+                } else {
+                    Meteor.call("userActivity.clear");
+                }
             }
         };
-    }, []);
+    }, [groupId]);
+
+    useEffect(() => {
+        if (!isEditing || !inputRef.current || !groupId) return;
+
+        const input = inputRef.current;
+        const highlightLayer = document.createElement("div");
+        highlightLayer.style.position = "absolute";
+        highlightLayer.style.pointerEvents = "none";
+        highlightLayer.style.width = "100%";
+        highlightLayer.style.height = "100%";
+        highlightLayer.style.top = "0";
+        highlightLayer.style.left = "0";
+
+        const parent = input.parentElement;
+        if (parent && parent.style.position !== "relative") {
+            parent.style.position = "relative";
+        }
+
+        if (parent) {
+            parent.appendChild(highlightLayer);
+
+            for (const selection of userSelections) {
+                if (selection.selection && selection.userId !== currentUser?._id) {
+                    const highlight = document.createElement("div");
+                    highlight.style.position = "absolute";
+                    highlight.style.backgroundColor = `${selection.color}66`;
+                    highlight.style.height = "100%";
+                    highlight.style.top = "0";
+                    highlight.style.pointerEvents = "none";
+
+                    const charWidth = input.offsetWidth / input.value.length;
+                    highlight.style.left = `${selection.selection.start * charWidth}px`;
+                    highlight.style.width = `${(selection.selection.end - selection.selection.start) * charWidth}px`;
+
+                    highlightLayer.appendChild(highlight);
+                }
+            }
+        }
+
+        return () => {
+            parent?.contains(highlightLayer) && parent.removeChild(highlightLayer);
+        };
+    }, [userSelections, isEditing, currentUser, groupId]);
 
     return (
         <>
@@ -128,41 +272,72 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick }: TaskProps) => {
                 {!isEditing ? (
                     <>
                         <span className={task.isChecked ? "text-completed" : ""}>
-                            <div className="task-edit-area" onClick={handleTaskTextClick}>
+                            <div className="task-edit-area" onClick={handleTaskTextClick} onKeyDown={handleKeyPress} role="button" tabIndex={0}>
                                 {task.text}
+                                {showCreator && task.createdBy && (
+                                    <div className="task-creator">
+                                        <small>Créée par: {task.createdBy}</small>
+                                    </div>
+                                )}
                             </div>
                         </span>
                         <div className="task-controls">
                             <input type="checkbox" checked={!!task.isChecked} onChange={handleCheckboxChange} className="task-checkbox" />
-                            <button onClick={handleDeleteClick} className="delete-btn">
+                            <button onClick={handleDeleteClick} className="delete-btn" type="button">
                                 &times;
                             </button>
                         </div>
+
+                        {Array.isArray(userEditingThisTask)
+                            ? userEditingThisTask.length > 0 &&
+                              userEditingThisTask.map((activity: UserActivity, index: number) => (
+                                  <div
+                                      key={`editing-${activity.sessionId || index}`}
+                                      className="editing-indicator"
+                                      style={{
+                                          borderLeft: `3px solid ${activity.color || "#666"}`,
+                                          backgroundColor: `${activity.color || "#666"}22`,
+                                      }}
+                                  >
+                                      <em>{activity.username || "Quelqu'un"} modifie cette tâche...</em>
+                                  </div>
+                              ))
+                            : userEditingThisTask && (
+                                  <div className="editing-indicator">
+                                      <em>Quelqu'un modifie cette tâche...</em>
+                                  </div>
+                              )}
+
+                        {!groupId && (isEditing || currentUserEditing) && (
+                            <div className="editing-indicator self-editing">
+                                <em>Vous êtes en train de modifier cette tâche...</em>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <>
                         <div className="edit-controls">
-                            <input ref={inputRef} type="text" value={editText} onChange={handleEditChange} onKeyDown={handleKeyDown} maxLength={280} className="edit-task-input" />
+                            <input ref={inputRef} type="text" value={editText} onChange={handleEditChange} onKeyDown={handleKeyDown} onSelect={groupId ? handleInputSelect : undefined} maxLength={280} className="edit-task-input" />
                             <div className="edit-buttons">
-                                <button onClick={saveEdit} className="save-btn">
+                                <button onClick={saveEdit} className="save-btn" type="button">
                                     ✓
                                 </button>
-                                <button onClick={cancelEditing} className="cancel-btn">
+                                <button onClick={cancelEditing} className="cancel-btn" type="button">
                                     ✕
                                 </button>
                             </div>
                         </div>
-                    </>
-                )}
 
-                {userEditingThisTask && !isEditing && (
-                    <div className="editing-indicator">
-                        <em>Quelqu'un modifie cette tâche...</em>
-                    </div>
+                        {!groupId && (
+                            <div className="editing-indicator self-editing">
+                                <em>Vous êtes en train de modifier cette tâche...</em>
+                            </div>
+                        )}
+                    </>
                 )}
             </li>
 
-            <ConfirmationModal isOpen={showConfirmation} message={`Êtes-vous sûr de vouloir supprimer la tâche "${task.text}" ?`} onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} />
+            <ConfirmationModal isOpen={showConfirmation} message={`Êtes-vous sûr de vouloir supprimer la tâche "${task.text}" ?`} onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} confirmText="Supprimer" cancelText="Annuler" />
         </>
     );
 };

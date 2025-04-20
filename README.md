@@ -6,9 +6,10 @@ Cette application Todo est construite avec Meteor.js, React et TypeScript. Elle 
 
 -   🔐 **Authentification** : Système d'authentification personnalisé avec stockage sécurisé des mots de passe
 -   📝 **Gestion des tâches** : Création, modification, marquage comme terminé et suppression de tâches
+-   👥 **Fonction collaborative** : Création de groupes pour collaborer sur des tâches et discuter en temps réel
 -   👤 **Tâches par utilisateur** : Chaque utilisateur ne voit que ses propres tâches
 -   💬 **Chat en temps réel** : Messagerie instantanée entre utilisateurs
--   🔔 **Notifications** : Alertes pour les messages non lus
+-   🔔 **Notifications** : Alertes pour les messages non lus et activités de groupe
 -   👀 **Indicateurs d'activité** : Voir quand les autres utilisateurs sont en train d'écrire ou de modifier une tâche
 -   📱 **Interface responsive** : Design adapté à différentes tailles d'écran
 -   🔍 **Filtrage** : Possibilité de filtrer les tâches terminées
@@ -59,11 +60,16 @@ meteor-todo-socket/
 │       ├── auth.css             # Styles pour l'authentification
 │       ├── modal.css            # Styles pour les modales
 │       ├── chat.css             # Styles pour le chat
+│       ├── navbar.css           # Styles pour la barre de navigation
+│       ├── groups.css           # Styles pour les fonctionnalités collaboratives
 │       └── responsive.css       # Media queries pour la responsivité
 │
 ├── imports/             # Modules importés par le client et le serveur
 │   ├── api/             # API et collections
 │   │   ├── authMethods.ts                # Méthodes d'authentification
+│   │   ├── GroupsCollection.ts           # Collection pour les groupes collaboratifs
+│   │   ├── groupsMethods.ts              # Méthodes pour gérer les groupes
+│   │   ├── GroupsPublication.ts          # Publication des groupes
 │   │   ├── MessagesCollection.ts         # Collection de messages
 │   │   ├── messagesMethods.ts            # Méthodes pour manipuler les messages
 │   │   ├── MessagesPublication.ts        # Publication des messages
@@ -77,6 +83,7 @@ meteor-todo-socket/
 │   │   └── UserActivityPublication.ts    # Publication des activités utilisateur
 │   │
 │   ├── types/           # Types TypeScript
+│   │   ├── group.ts             # Types pour les groupes collaboratifs
 │   │   ├── message.ts           # Types pour les messages
 │   │   ├── task.ts              # Types pour les tâches
 │   │   └── user.ts              # Types pour les utilisateurs
@@ -87,16 +94,24 @@ meteor-todo-socket/
 │   └── ui/              # Composants React
 │       ├── App.tsx                    # Composant principal
 │       ├── ConfirmationModal.tsx      # Modal de confirmation
+│       ├── Navbar.tsx                 # Barre de navigation avec notifications
 │       ├── Task.tsx                   # Composant pour une tâche
 │       ├── TaskForm.tsx               # Formulaire pour ajouter une tâche
 │       ├── auth/                      # Composants d'authentification
 │       │   ├── LoginForm.tsx          # Formulaire de connexion
 │       │   └── RegisterForm.tsx       # Formulaire d'inscription
-│       └── chat/                      # Composants de chat
-│           ├── ChatContainer.tsx      # Conteneur principal du chat
-│           ├── ChatWindow.tsx         # Fenêtre de conversation
-│           ├── MessageInput.tsx       # Saisie de messages
-│           └── UsersList.tsx          # Liste des utilisateurs
+│       ├── chat/                      # Composants de chat
+│       │   ├── ChatContainer.tsx      # Conteneur principal du chat
+│       │   ├── ChatWindow.tsx         # Fenêtre de conversation
+│       │   ├── MessageInput.tsx       # Saisie de messages
+│       │   └── UsersList.tsx          # Liste des utilisateurs
+│       └── groups/                    # Composants collaboratifs
+│           ├── CreateGroupModal.tsx   # Modal pour créer un groupe
+│           ├── GroupChat.tsx          # Chat de groupe
+│           ├── GroupMembers.tsx       # Gestion des membres
+│           ├── GroupsContainer.tsx    # Conteneur principal des groupes
+│           ├── GroupsList.tsx         # Liste des groupes
+│           └── GroupTasks.tsx         # Tâches collaboratives
 │
 ├── server/              # Code côté serveur
 │   └── main.ts          # Point d'entrée côté serveur
@@ -153,6 +168,37 @@ meteor-todo-socket/
 
 4. **Déconnexion** :
     - Cliquez sur le bouton "Déconnexion" pour vous déconnecter
+
+### Système collaboratif
+
+1. **Accéder à l'espace collaboratif** :
+
+    - Cliquez sur le bouton "Collaboratif" dans la barre de navigation
+
+2. **Créer un groupe** :
+
+    - Cliquez sur le bouton "Créer un groupe"
+    - Remplissez le nom du groupe et une description optionnelle
+    - Sélectionnez les membres à ajouter au groupe
+    - Cliquez sur "Créer" pour valider
+
+3. **Utiliser un groupe** :
+
+    - Sélectionnez un groupe dans la liste à gauche pour y accéder
+    - Naviguez entre les onglets pour accéder aux différentes fonctionnalités :
+        - **Tâches** : Gérez des tâches collaboratives au sein du groupe
+        - **Discussion** : Chattez avec tous les membres du groupe simultanément
+        - **Membres** : Consultez et gérez les membres du groupe
+
+4. **Gestion des tâches collaboratives** :
+
+    - Créez des tâches accessibles à tous les membres du groupe
+    - Suivez l'avancement des tâches partagées
+    - Voyez qui est en train de modifier une tâche en temps réel
+
+5. **Notifications** :
+    - Recevez des alertes dans la barre de navigation lorsqu'il y a de l'activité dans vos groupes
+    - Restez informé des nouvelles tâches et messages dans les groupes dont vous êtes membre
 
 ## Système d'authentification personnalisé
 

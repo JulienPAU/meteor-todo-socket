@@ -1,7 +1,3 @@
-/**
- * Utilitaires de validation pour sécuriser les inputs
- */
-
 export const encryptMessage = (message: string): string => {
     if (!message) return '';
 
@@ -95,4 +91,25 @@ export const validateChatMessage = (message: string): { isValid: boolean; error?
     }
 
     return { isValid: true };
+};
+
+export const randomColor = (): string => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+};
+
+export const formatDate = (date: Date): string => {
+    if (!date) return '';
+
+    const pad = (num: number): string => num < 10 ? `0${num}` : `${num}`;
+
+    const day = pad(date.getDate());
+    const month = pad(date.getMonth() + 1);
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
 };

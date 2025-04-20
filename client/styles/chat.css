@@ -139,6 +139,8 @@
     border-radius: 18px;
     position: relative;
     word-break: break-word;
+    display: inline-block;
+    min-width: 50px;
 }
 
 .message.sent {
@@ -200,6 +202,12 @@
 
 .message-content {
     word-break: break-word;
+    white-space: pre-wrap;
+    width: 100%;
+    display: block;
+    text-align: left;
+    overflow-wrap: break-word;
+    min-width: 50px;
 }
 
 .message-input-container {

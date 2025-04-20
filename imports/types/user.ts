@@ -1,18 +1,26 @@
 export interface User {
-    _id: string;
-    username?: string;
-    profile?: {
-        name?: string;
-        defaultTasksCreated?: boolean;
+  _id: string;
+  username?: string;
+  profile?: {
+    name?: string;
+    defaultTasksCreated?: boolean;
+  };
+  status?: {
+    online: boolean;
+    lastActivity?: Date;
+    lastLogin?: {
+      date: Date;
     };
-    status?: {
-        online: boolean;
-        lastActivity?: Date;
+  };
+  lastReadTimestamps?: {
+    groups: {
+      [groupId: string]: Date;
     };
+  };
 }
 
 export interface UserCredentials {
-    username: string;
-    hashedPassword: string;
-    createdAt: Date;
+  username: string;
+  hashedPassword: string;
+  createdAt: Date;
 }

@@ -1,0 +1,746 @@
+/* Styles pour les groupes collaboratifs */
+
+/* Layout général */
+.groups-container {
+  display: flex;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.groups-sidebar {
+  width: 250px;
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.groups-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Liste des groupes */
+.groups-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.groups-header h3 {
+  margin: 0;
+  color: var(--text-color);
+}
+
+.create-group-btn {
+  background-color: var(--accent-color, #007bff);
+  color: white !important;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.create-group-btn:hover {
+  background-color: var(--accent-hover, #0069d9);
+}
+
+.group-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  background-color: var(--background);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.group-item:hover {
+  background-color: var(--hover-color);
+}
+
+.group-item.active {
+  background-color: var(--accent-color-light);
+  border-left: 3px solid var(--accent-color);
+}
+
+.group-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.group-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.group-members-count {
+  font-style: italic;
+}
+
+.delete-group-btn {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.delete-group-btn:hover {
+  opacity: 1;
+}
+
+.empty-groups-message {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-secondary);
+}
+
+/* Modal de création de groupe */
+.group-modal {
+  max-width: 500px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--background);
+  color: var(--text-color);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancel-button {
+  background-color: var(--background-secondary);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.submit-button {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+/* Contenu de groupe */
+.group-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.group-header h2 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+}
+
+.group-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.group-tab-btn {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.group-tab-btn.active {
+  color: var(--accent-color);
+}
+
+.group-tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--accent-color);
+}
+
+.group-tab-content {
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Message quand aucun groupe n'est sélectionné */
+.no-group-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.create-group-large-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--accent-color, #007bff);
+  color: white !important; /* Force la couleur du texte en blanc */
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Ajoute un peu de contraste */
+}
+
+.create-group-large-btn:hover {
+  background-color: var(--accent-hover, #0069d9);
+}
+
+/* Liste des membres */
+.group-members-container {
+  margin-top: 1rem;
+}
+
+.add-member-form {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.add-member-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-member-input-group input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--background-secondary);
+  border-radius: 4px;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-username {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.member-role {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.member-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.change-role-btn,
+.remove-member-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.change-role-btn {
+  color: var(--accent-color, #007bff);
+}
+
+.remove-member-btn {
+  color: var(--danger-color, #dc3545);
+  font-weight: bold;
+}
+
+.change-role-btn:hover,
+.remove-member-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.leave-group-btn {
+  background-color: var(--danger-color, #dc3545);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.leave-group-btn:hover {
+  background-color: var(--danger-hover, #c82333);
+}
+
+/* Styles améliorés pour la gestion des membres */
+.members-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.add-member-btn {
+  background-color: var(--accent-color, #007bff);
+  color: white !important;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.add-member-btn:hover {
+  background-color: var(--accent-hover, #0069d9);
+}
+
+.add-member-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-search-results {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.user-search-item {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color, #eee);
+}
+
+.user-search-item:last-child {
+  border-bottom: none;
+}
+
+.user-search-item:hover {
+  background-color: var(--hover-color, #f5f5f5);
+}
+
+.no-results {
+  padding: 0.75rem;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+  text-align: center;
+}
+
+.member-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+
+.current-user-tag {
+  font-size: 0.8rem;
+  color: var(--accent-color, #007bff);
+  font-style: italic;
+}
+
+.change-role-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Tâches de groupe */
+.group-tasks-container {
+  padding-top: 1rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Styles pour garantir que le formulaire d'ajout de tâche soit visible */
+.task-form {
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.task-form input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+}
+
+.task-form button {
+  background-color: var(--accent-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+
+/* Curseurs collaboratifs */
+.collaborative-cursors {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.cursor {
+  position: absolute;
+  pointer-events: none;
+  transition: transform 0.1s ease;
+}
+
+.cursor-pointer {
+  width: 15px;
+  height: 20px;
+  background-color: currentColor;
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  transform: rotate(-20deg);
+}
+
+.cursor-label {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: currentColor;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transform: translateY(5px);
+}
+
+.text-selection {
+  position: absolute;
+  background-color: currentColor;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .groups-container {
+    flex-direction: column;
+  }
+
+  .groups-sidebar {
+    width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .add-member-input-group {
+    flex-direction: column;
+  }
+}
+
+/* Styles pour le chat de groupe */
+.group-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  max-height: 600px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-message {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.chat-message.sent {
+  justify-content: flex-end;
+}
+
+.chat-message.received {
+  justify-content: flex-start;
+}
+
+.message-content {
+  max-width: 70%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  position: relative;
+  word-break: break-word;
+}
+
+.chat-message.sent .message-content {
+  background-color: var(--accent-color, #007bff);
+  color: white;
+  border-radius: 12px 12px 0 12px;
+}
+
+.chat-message.received .message-content {
+  background-color: var(--background-secondary, #f0f2f5);
+  color: var(--text-color);
+  border-radius: 12px 12px 12px 0;
+  border-left: 3px solid var(--text-secondary, #888);
+}
+
+.message-sender {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.delete-message-btn {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.chat-message.received .delete-message-btn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.delete-message-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.chat-message.sent .delete-message-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-input-form {
+  display: flex;
+  padding: 1rem;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background-color: var(--background);
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.send-message-btn {
+  background-color: var(--accent-color, #007bff);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 0;
+}
+
+.send-message-btn::after {
+  content: "→";
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.send-message-btn:hover {
+  background-color: var(--accent-hover, #0069d9);
+}
+
+.send-message-btn:disabled {
+  background-color: var(--accent-color-light, #cce5ff);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.empty-chat-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Styles pour les badges de notification */
+.notification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--danger-color, #dc3545);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 10px;
+  padding: 0 5px;
+  margin-left: 5px;
+  position: relative;
+  top: -8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+/* Groupe item badges */
+.group-name-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.group-notification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--danger-color, #dc3545);
+  color: white;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Indicateur d'activité pour l'onglet collaboratif */
+.activity-indicator {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--accent-color);
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--danger-color, #dc3545);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  animation: pulse 1.5s infinite;
+}

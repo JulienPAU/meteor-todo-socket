@@ -7,19 +7,53 @@ import { TaskForm } from "./TaskForm";
 import { LoginForm } from "./auth/LoginForm";
 import { RegisterForm } from "./auth/RegisterForm";
 import { ChatContainer } from "./chat/ChatContainer";
+import { GroupsContainer } from "./groups/GroupsContainer";
 import { Navbar } from "./Navbar";
 import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
+import { GroupsCollection } from "/imports/api/GroupsCollection";
+
+type AppMode = "tasks" | "chat" | "groups";
 
 export const App = () => {
     const [user, setUser] = useState<User | null>(null);
     const [showLogin, setShowLogin] = useState(true);
-    const [showChat, setShowChat] = useState(false);
+    const [appMode, setAppMode] = useState<AppMode>("tasks");
 
     const isTasksLoading = useSubscribe("tasks");
     const isMessagesLoading = useSubscribe("messages");
+    const isGroupsLoading = useSubscribe("groups");
     const [hideCompleted, setHideCompleted] = useState(false);
+
+    const [hasGroupActivity, setHasGroupActivity] = useState(false);
+
+    useEffect(() => {
+        if (!user || appMode === "groups") {
+            setHasGroupActivity(false);
+            return;
+        }
+
+        const checkGroupActivity = async () => {
+            try {
+                const result = await Meteor.callAsync("messages.checkGroupActivity");
+                if (result && result.hasActivity) {
+                    setHasGroupActivity(true);
+                } else {
+                    setHasGroupActivity(false);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la vérification des activités:", error);
+                setHasGroupActivity(false);
+            }
+        };
+
+        checkGroupActivity();
+
+        const intervalId = setInterval(checkGroupActivity, 5000);
+
+        return () => clearInterval(intervalId);
+    }, [user, appMode]);
 
     useEffect(() => {
         const userId = localStorage.getItem("Meteor.userId");
@@ -46,7 +80,11 @@ export const App = () => {
     };
 
     const toggleChat = () => {
-        setShowChat(!showChat);
+        setAppMode(appMode === "chat" ? "tasks" : "chat");
+    };
+
+    const toggleGroups = () => {
+        setAppMode(appMode === "groups" ? "tasks" : "groups");
     };
 
     const handleToggleChecked = ({ _id, isChecked }: Task) => Meteor.callAsync("tasks.toggle", { _id, isChecked });
@@ -69,13 +107,13 @@ export const App = () => {
             return [];
         }
 
-        return TasksCollection.find(hideCompleted ? hideCompletedFilter : {}, {
+        return TasksCollection.find(hideCompleted ? { ...hideCompletedFilter, groupId: { $exists: false } } : { groupId: { $exists: false } }, {
             sort: { createdAt: -1 },
         }).fetch();
     });
 
     const unreadMessagesCount = useTracker(() => {
-        if (!user || showChat) {
+        if (!user || appMode === "chat") {
             return 0;
         }
 
@@ -88,7 +126,7 @@ export const App = () => {
     if (!user) {
         return (
             <div className="app">
-                <Navbar user={null} title="📝️ To Do List" showChat={false} onToggleChat={() => {}} onLogout={() => {}} />
+                <Navbar user={null} title="📝️ To Do List" appMode="tasks" onToggleChat={() => {}} onToggleGroups={() => {}} onLogout={() => {}} />
                 <div className="auth-container">
                     {showLogin ? (
                         <>
@@ -119,54 +157,71 @@ export const App = () => {
     if (isTasksLoading()) {
         return (
             <div className="app">
-                <Navbar user={user} title="📝️ To Do List" showChat={false} onToggleChat={() => {}} onLogout={handleLogout} />
+                <Navbar user={user} title="📝️ To Do List" appMode="tasks" onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
                 <div className="main">
                     <div className="loading-container">
-                        <p>Chargement de vos tâches...</p>
+                        <p>Chargement de vos données...</p>
                     </div>
                 </div>
             </div>
         );
     }
 
-    if (showChat && user) {
-        return (
-            <div className="app">
-                <Navbar user={user} title="💬 Chat" showChat={true} onToggleChat={toggleChat} onLogout={handleLogout} />
-                <div className="main">
-                    <ChatContainer userId={user._id} />
-                </div>
-            </div>
-        );
-    }
+    const getTitle = () => {
+        switch (appMode) {
+            case "chat":
+                return "💬 Chat";
+            case "groups":
+                return "👥 Groupes Collaboratifs";
+            case "tasks":
+            default:
+                return `📝️ To Do List${pendingTasksTitle}`;
+        }
+    };
+
+    const renderContent = () => {
+        switch (appMode) {
+            case "chat":
+                return <ChatContainer userId={user._id} />;
+
+            case "groups":
+                return <GroupsContainer user={user} />;
+
+            case "tasks":
+            default:
+                return (
+                    <>
+                        <TaskForm />
+
+                        <div className="filter">
+                            <button onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? "Afficher tout" : "Masquer les tâches terminées"}</button>
+                        </div>
+
+                        <ul className="tasks">
+                            {tasks.map((task: Task) => (
+                                <TaskComponent key={task._id} task={task} onCheckboxClick={handleToggleChecked} onDeleteClick={handleDelete} />
+                            ))}
+                        </ul>
+
+                        <div className="tasks-edit-hint">
+                            <em>Astuce : Cliquez sur le texte d'une tâche pour la modifier</em>
+                        </div>
+
+                        {tasks.length === 0 && (
+                            <div className="empty-tasks-message">
+                                <p>{hideCompleted ? "Pas de tâches en cours" : "Pas de tâches pour le moment"}</p>
+                                <p>Ajoutez votre première tâche ci-dessus!</p>
+                            </div>
+                        )}
+                    </>
+                );
+        }
+    };
 
     return (
         <div className="app">
-            <Navbar user={user} title={`📝️ To Do List${pendingTasksTitle}`} unreadMessagesCount={unreadMessagesCount} showChat={false} onToggleChat={toggleChat} onLogout={handleLogout} />
-            <div className="main">
-                <TaskForm />
-
-                <div className="filter">
-                    <button onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? "Afficher tout" : "Masquer les tâches terminées"}</button>
-                </div>
-
-                <ul className="tasks">
-                    {tasks.map((task: Task) => (
-                        <TaskComponent key={task._id} task={task} onCheckboxClick={handleToggleChecked} onDeleteClick={handleDelete} />
-                    ))}
-                </ul>
-
-                <div className="tasks-edit-hint">
-                    <em>Astuce : Cliquez sur le texte d'une tâche pour la modifier</em>
-                </div>
-
-                {tasks.length === 0 && (
-                    <div className="empty-tasks-message">
-                        <p>{hideCompleted ? "Pas de tâches en cours" : "Pas de tâches pour le moment"}</p>
-                        <p>Ajoutez votre première tâche ci-dessus!</p>
-                    </div>
-                )}
-            </div>
+            <Navbar user={user} title={getTitle()} unreadMessagesCount={unreadMessagesCount} hasGroupActivity={hasGroupActivity} appMode={appMode} onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
+            <div className="main">{renderContent()}</div>
         </div>
     );
 };
