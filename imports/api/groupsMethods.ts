@@ -185,7 +185,6 @@ Meteor.methods({
       throw new Meteor.Error("group-not-found", "Groupe non trouvé");
     }
 
-    // Si l'utilisateur retire quelqu'un d'autre, il doit être admin
     if (data.userId !== this.userId) {
       const isAdmin = group.members.some(
         (member) => member.userId === this.userId && member.role === "admin"
@@ -199,7 +198,6 @@ Meteor.methods({
       }
     }
 
-    // Vérifier si l'utilisateur à retirer est membre
     const memberToRemove = group.members.find(
       (member) => member.userId === data.userId
     );
@@ -210,7 +208,6 @@ Meteor.methods({
       );
     }
 
-    // Si c'est le dernier admin, empêcher le retrait
     if (memberToRemove.role === "admin") {
       const adminCount = group.members.filter(
         (member) => member.role === "admin"
@@ -223,7 +220,6 @@ Meteor.methods({
       }
     }
 
-    // Retirer le membre
     return GroupsCollection.updateAsync(
       { _id: data.groupId },
       {
@@ -235,7 +231,6 @@ Meteor.methods({
   },
 
   "groups.changeMemberRole": async function (data: GroupChangeMemberRole) {
-    // Vérification que l'utilisateur est connecté
     if (!this.userId) {
       throw new Meteor.Error(
         "not-authorized",
@@ -249,18 +244,15 @@ Meteor.methods({
       role: String
     });
 
-    // Valider le rôle
     if (!["admin", "member"].includes(data.role)) {
       throw new Meteor.Error("invalid-role", "Rôle invalide");
     }
 
-    // Récupération du groupe
     const group = await GroupsCollection.findOneAsync(data.groupId);
     if (!group) {
       throw new Meteor.Error("group-not-found", "Groupe non trouvé");
     }
 
-    // Vérification que l'utilisateur courant est admin du groupe
     const isAdmin = group.members.some(
       (member) => member.userId === this.userId && member.role === "admin"
     );
@@ -272,7 +264,6 @@ Meteor.methods({
       );
     }
 
-    // On ne peut pas changer son propre rôle
     if (data.userId === this.userId) {
       throw new Meteor.Error(
         "cannot-change-own-role",
@@ -280,7 +271,6 @@ Meteor.methods({
       );
     }
 
-    // Vérifier si l'utilisateur est membre
     const memberToUpdate = group.members.find(
       (member) => member.userId === data.userId
     );
@@ -291,7 +281,6 @@ Meteor.methods({
       );
     }
 
-    // Si c'est une rétrogradation d'admin à membre, vérifier qu'il reste au moins un autre admin
     if (memberToUpdate.role === "admin" && data.role === "member") {
       const adminCount = group.members.filter(
         (member) => member.role === "admin"
@@ -304,7 +293,6 @@ Meteor.methods({
       }
     }
 
-    // Mettre à jour le rôle
     return GroupsCollection.updateAsync(
       { _id: data.groupId, "members.userId": data.userId },
       {

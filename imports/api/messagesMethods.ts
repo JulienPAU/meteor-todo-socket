@@ -56,7 +56,6 @@ Meteor.methods({
       });
     }
 
-    // Message privé
     if (!receiverId || !receiverUsername) {
       throw new Meteor.Error(
         "destinataire-requis",
@@ -87,7 +86,6 @@ Meteor.methods({
       throw new Meteor.Error("message-non-trouve", "Message non trouvé");
     }
 
-    // Pour les messages de groupe, pas de marquage individuel comme lu
     if (message.groupId) {
       return;
     }
@@ -99,7 +97,6 @@ Meteor.methods({
       );
     }
 
-    // S'assurer que le message n'est pas déjà marqué comme lu
     if (message.read) {
       return;
     }
@@ -117,7 +114,6 @@ Meteor.methods({
 
     check(groupId, String);
 
-    // Vérifier que l'utilisateur est membre du groupe
     const group = await GroupsCollection.findOneAsync({
       _id: groupId,
       "members.userId": this.userId
@@ -131,8 +127,7 @@ Meteor.methods({
     }
 
     try {
-      // Utilisons $addToSet pour ajouter l'ID de l'utilisateur à un tableau
-      // de lecteurs sur chaque message du groupe
+
       await MessagesCollection.updateAsync(
         { groupId: groupId },
         {
@@ -143,7 +138,6 @@ Meteor.methods({
         { multi: true }
       );
 
-      // Mettre à jour l'horodatage dans le profil utilisateur pour compatibilité
       await Meteor.users.updateAsync(
         { _id: this.userId },
         {
@@ -180,9 +174,7 @@ Meteor.methods({
         throw new Meteor.Error("message-non-trouve", "Message non trouvé");
       }
 
-      // Message de groupe
       if (message.groupId) {
-        // Vérifier que l'utilisateur est l'auteur du message ou administrateur du groupe
         const group = await GroupsCollection.findOneAsync({
           _id: message.groupId,
           "members.userId": this.userId
@@ -206,7 +198,6 @@ Meteor.methods({
           );
         }
       }
-      // Message privé
       else if (
         message.senderId !== this.userId &&
         message.receiverId !== this.userId
@@ -243,7 +234,6 @@ Meteor.methods({
       throw new Meteor.Error("contenu-invalide", contentValidation.error);
     }
 
-    // Vérifier que l'utilisateur est membre du groupe
     const group = await GroupsCollection.findOneAsync({
       _id: groupId,
       "members.userId": this.userId
@@ -276,7 +266,6 @@ Meteor.methods({
       throw new Meteor.Error("non-autorise", "Vous devez être connecté");
     }
 
-    // Récupération des groupes dont l'utilisateur est membre
     const userGroups = await GroupsCollection.find({
       "members.userId": this.userId
     }).fetchAsync();
@@ -286,14 +275,12 @@ Meteor.methods({
     for (const group of userGroups) {
       if (!group._id) continue;
 
-      // Vérifier les messages non lus dans ce groupe
       const unreadMessages = await MessagesCollection.find({
         groupId: group._id,
         $or: [{ readBy: { $exists: false } }, { readBy: { $ne: this.userId } }],
-        senderId: { $ne: this.userId } // Ne pas compter ses propres messages
+        senderId: { $ne: this.userId }
       }).countAsync();
 
-      // Vérifier les tâches en cours dans ce groupe
       const pendingTasks = await TasksCollection.find({
         groupId: group._id,
         isChecked: { $ne: true }

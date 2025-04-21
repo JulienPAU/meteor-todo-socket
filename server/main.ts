@@ -91,6 +91,36 @@ Meteor.startup(async () => {
   if (isRailwayEnvironment() || process.env.RESET_DATABASE === "true" || process.env.RESET_DATABASE === "1") {
     await resetDatabase();
   }
+  
+  // Initialisation des collections pour s'assurer qu'elles existent dans MongoDB
+  // Ces documents seront créés uniquement si les collections sont vides
+  if (await UserActivityCollection.find().countAsync() === 0) {
+    await UserActivityCollection.insertAsync({
+      action: "initialization",
+      timestamp: new Date(),
+      temporary: true
+    });
+    console.log("Collection user_activity initialisée");
+  }
+  
+  if (await GroupsCollection.find().countAsync() === 0) {
+    await GroupsCollection.insertAsync({
+      name: "Initialisation",
+      description: "Document d'initialisation de la collection",
+      createdAt: new Date(),
+      temporary: true
+    });
+    console.log("Collection groups initialisée");
+  }
+  
+  if (await MessagesCollection.find().countAsync() === 0) {
+    await MessagesCollection.insertAsync({
+      text: "Initialisation de la collection",
+      createdAt: new Date(),
+      temporary: true
+    });
+    console.log("Collection messages initialisée");
+  }
 
   const existingUser = await Meteor.users.findOneAsync({
     username: SEED_USERNAME
