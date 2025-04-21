@@ -44,7 +44,23 @@ export const App = () => {
                 }
             } catch (error) {
                 console.error("Erreur lors de la vérification des activités:", error);
-                setHasGroupActivity(false);
+
+                if ((error as { error: string }).error === "non-autorise") {
+                    const userId = localStorage.getItem("Meteor.userId");
+                    const token = localStorage.getItem("Meteor.loginToken");
+                    if (userId && token) {
+                        try {
+                            const userInfo = await Meteor.callAsync("auth.getUserInfo", { userId });
+                            if (!userInfo) {
+                                console.log("Session expirée, déconnexion...");
+                                handleLogout();
+                            }
+                        } catch (authError) {
+                            console.error("Erreur d'authentification:", authError);
+                            handleLogout();
+                        }
+                    }
+                }
             }
         };
 

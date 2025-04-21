@@ -53,7 +53,10 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
     }, [messages]);
 
     const formatMessageTime = (date: Date) => {
-        return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        return new Date(date).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
     };
 
     const getDecryptedContent = (message: Message): string => {
