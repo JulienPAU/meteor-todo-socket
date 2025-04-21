@@ -4,8 +4,6 @@ import { Meteor } from "meteor/meteor";
 import { Group } from "/imports/types/group";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
 import { formatDate } from "/imports/utils/validators";
-import { MessagesCollection } from "../../api/MessagesCollection";
-import { TasksCollection } from "../../api/TasksCollection";
 
 interface GroupsListProps {
     onSelectGroup: (groupId: string, groupName: string) => void;
