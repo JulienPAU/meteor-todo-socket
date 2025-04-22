@@ -9,12 +9,13 @@ import { RegisterForm } from "./auth/RegisterForm";
 import { ChatContainer } from "./chat/ChatContainer";
 import { GroupsContainer } from "./groups/GroupsContainer";
 import { Navbar } from "./Navbar";
+import { NotificationPermissionRequest } from "./NotificationPermissionRequest";
 import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
 import { initTabNotifications, updateTabTitle } from "/imports/utils/tabNotifications";
-import { registerServiceWorker, updateAppBadge, checkNotificationPermission } from "/imports/utils/pwaManager";
+import { registerServiceWorker, updateAppBadge, checkNotificationPermission, showNotification } from "/imports/utils/pwaManager";
 
 type AppMode = "tasks" | "chat" | "groups";
 
@@ -22,6 +23,7 @@ export const App = () => {
     const [user, setUser] = useState<User | null>(null);
     const [showLogin, setShowLogin] = useState(true);
     const [appMode, setAppMode] = useState<AppMode>("tasks");
+    const [showPermissionRequest, setShowPermissionRequest] = useState(false);
 
     const isTasksLoading = useSubscribe("tasks");
     const isMessagesLoading = useSubscribe("messages");
@@ -81,6 +83,10 @@ export const App = () => {
                 .then((userInfo) => {
                     if (userInfo) {
                         setUser({ _id: userId, username: userInfo.username });
+
+                        if (Notification.permission === "default") {
+                            setShowPermissionRequest(true);
+                        }
                     }
                 })
                 .catch((error) => {
@@ -103,6 +109,13 @@ export const App = () => {
 
             const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
             updateAppBadge(totalNotifications);
+
+            if (totalNotifications > 0 && Notification.permission === "granted" && document.hidden) {
+                showNotification(`${totalNotifications} nouvelles notifications`, {
+                    body: unreadMessagesCount > 0 ? `Vous avez ${unreadMessagesCount} nouveaux messages` : "Vous avez une nouvelle activité de groupe",
+                    data: { url: "/" },
+                });
+            }
         }
     }, [user, unreadMessagesCount, hasGroupActivity]);
 
@@ -244,6 +257,7 @@ export const App = () => {
         <div className="app">
             <Navbar user={user} title={getTitle()} unreadMessagesCount={unreadMessagesCount} hasGroupActivity={hasGroupActivity} appMode={appMode} onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
             <div className="main">{renderContent()}</div>
+            {user && showPermissionRequest && <NotificationPermissionRequest />}
         </div>
     );
 };
