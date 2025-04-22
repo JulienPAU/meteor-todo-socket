@@ -14,6 +14,7 @@ import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
 import { initTabNotifications, updateTabTitle } from "/imports/utils/tabNotifications";
+import { registerServiceWorker, updateAppBadge, checkNotificationPermission } from "/imports/utils/pwaManager";
 
 type AppMode = "tasks" | "chat" | "groups";
 
@@ -87,6 +88,9 @@ export const App = () => {
                     handleLogout();
                 });
         }
+
+        registerServiceWorker();
+        checkNotificationPermission();
     }, []);
 
     useEffect(() => {
@@ -96,6 +100,9 @@ export const App = () => {
     useEffect(() => {
         if (user) {
             updateTabTitle(unreadMessagesCount, hasGroupActivity);
+
+            const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
+            updateAppBadge(totalNotifications);
         }
     }, [user, unreadMessagesCount, hasGroupActivity]);
 

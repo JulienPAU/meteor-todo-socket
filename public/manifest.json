@@ -1,0 +1,17 @@
+{
+    "name": "TodoList Collaborative",
+    "short_name": "TodoList",
+    "description": "Application collaborative de gestion de tâches",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#6c63ff",
+    "icons": [
+        {
+            "src": "icons/app-icon.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
