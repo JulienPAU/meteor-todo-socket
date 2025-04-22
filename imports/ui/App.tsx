@@ -13,6 +13,7 @@ import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
+import { initTabNotifications, updateTabTitle } from "/imports/utils/tabNotifications";
 
 type AppMode = "tasks" | "chat" | "groups";
 
@@ -59,6 +60,17 @@ export const App = () => {
         return false;
     }, [user, appMode]);
 
+    const unreadMessagesCount = useTracker(() => {
+        if (!user || appMode === "chat") {
+            return 0;
+        }
+
+        return MessagesCollection.find({
+            receiverId: user._id,
+            read: false,
+        }).count();
+    });
+
     useEffect(() => {
         const userId = localStorage.getItem("Meteor.userId");
         const token = localStorage.getItem("Meteor.loginToken");
@@ -76,6 +88,16 @@ export const App = () => {
                 });
         }
     }, []);
+
+    useEffect(() => {
+        initTabNotifications();
+    }, []);
+
+    useEffect(() => {
+        if (user) {
+            updateTabTitle(unreadMessagesCount, hasGroupActivity);
+        }
+    }, [user, unreadMessagesCount, hasGroupActivity]);
 
     const handleLogout = () => {
         localStorage.removeItem("Meteor.userId");
@@ -114,17 +136,6 @@ export const App = () => {
         return TasksCollection.find(hideCompleted ? { ...hideCompletedFilter, groupId: { $exists: false } } : { groupId: { $exists: false } }, {
             sort: { createdAt: -1 },
         }).fetch();
-    });
-
-    const unreadMessagesCount = useTracker(() => {
-        if (!user || appMode === "chat") {
-            return 0;
-        }
-
-        return MessagesCollection.find({
-            receiverId: user._id,
-            read: false,
-        }).count();
     });
 
     if (!user) {
