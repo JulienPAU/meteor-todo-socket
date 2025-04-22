@@ -24,51 +24,39 @@ export const App = () => {
     const isTasksLoading = useSubscribe("tasks");
     const isMessagesLoading = useSubscribe("messages");
     const isGroupsLoading = useSubscribe("groups");
+    const isAllGroupTasksLoading = useSubscribe("tasks.allGroupTasks");
+    const isAllGroupMessagesLoading = useSubscribe("groupMessages.all");
     const [hideCompleted, setHideCompleted] = useState(false);
 
-    const [hasGroupActivity, setHasGroupActivity] = useState(false);
-
-    useEffect(() => {
+    const hasGroupActivity = useTracker(() => {
         if (!user || appMode === "groups") {
-            setHasGroupActivity(false);
-            return;
+            return false;
         }
 
-        const checkGroupActivity = async () => {
-            try {
-                const result = await Meteor.callAsync("messages.checkGroupActivity");
-                if (result && result.hasActivity) {
-                    setHasGroupActivity(true);
-                } else {
-                    setHasGroupActivity(false);
-                }
-            } catch (error) {
-                console.error("Erreur lors de la vérification des activités:", error);
+        const userGroups = GroupsCollection.find({ "members.userId": user._id }).fetch();
 
-                if ((error as { error: string }).error === "non-autorise") {
-                    const userId = localStorage.getItem("Meteor.userId");
-                    const token = localStorage.getItem("Meteor.loginToken");
-                    if (userId && token) {
-                        try {
-                            const userInfo = await Meteor.callAsync("auth.getUserInfo", { userId });
-                            if (!userInfo) {
-                                console.log("Session expirée, déconnexion...");
-                                handleLogout();
-                            }
-                        } catch (authError) {
-                            console.error("Erreur d'authentification:", authError);
-                            handleLogout();
-                        }
-                    }
-                }
+        for (const group of userGroups) {
+            const groupId = group._id;
+
+            const hasUnreadMessages =
+                MessagesCollection.find({
+                    groupId: groupId,
+                    senderId: { $ne: user._id },
+                    $or: [{ readBy: { $exists: false } }, { readBy: { $ne: user._id } }],
+                }).count() > 0;
+
+            const hasPendingTasks =
+                TasksCollection.find({
+                    groupId: groupId,
+                    isChecked: { $ne: true },
+                }).count() > 0;
+
+            if (hasUnreadMessages || hasPendingTasks) {
+                return true;
             }
-        };
+        }
 
-        checkGroupActivity();
-
-        const intervalId = setInterval(checkGroupActivity, 5000);
-
-        return () => clearInterval(intervalId);
+        return false;
     }, [user, appMode]);
 
     useEffect(() => {

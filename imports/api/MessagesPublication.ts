@@ -94,3 +94,25 @@ Meteor.publish("groupMessages", async function (groupId) {
     }
   );
 });
+
+Meteor.publish("groupMessages.all", function () {
+  if (!this.userId) {
+    return this.ready();
+  }
+
+
+  return MessagesCollection.find(
+    {
+      groupId: { $exists: true },
+      $or: [
+        { readBy: { $exists: false } },
+        { readBy: { $ne: this.userId } }
+      ],
+      senderId: { $ne: this.userId }
+    },
+    {
+      sort: { createdAt: -1 },
+      limit: 500
+    }
+  );
+});
