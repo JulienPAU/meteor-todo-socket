@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { TasksCollection } from "/imports/api/TasksCollection";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
@@ -9,10 +9,13 @@ import { RegisterForm } from "./auth/RegisterForm";
 import { ChatContainer } from "./chat/ChatContainer";
 import { GroupsContainer } from "./groups/GroupsContainer";
 import { Navbar } from "./Navbar";
+import { NotificationPermissionRequest } from "./NotificationPermissionRequest";
 import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
+import { initTabNotifications, updateTabTitle } from "/imports/utils/tabNotifications";
+import { registerServiceWorker, updateAppBadge, checkNotificationPermission, showNotification } from "/imports/utils/pwaManager";
 
 type AppMode = "tasks" | "chat" | "groups";
 
@@ -20,6 +23,11 @@ export const App = () => {
     const [user, setUser] = useState<User | null>(null);
     const [showLogin, setShowLogin] = useState(true);
     const [appMode, setAppMode] = useState<AppMode>("tasks");
+    const [showPermissionRequest, setShowPermissionRequest] = useState(false);
+
+    const prevNotificationsRef = useRef({ messages: 0, groups: false });
+
+    const isInitialLoadRef = useRef(true);
 
     const isTasksLoading = useSubscribe("tasks");
     const isMessagesLoading = useSubscribe("messages");
@@ -59,6 +67,17 @@ export const App = () => {
         return false;
     }, [user, appMode]);
 
+    const unreadMessagesCount = useTracker(() => {
+        if (!user || appMode === "chat") {
+            return 0;
+        }
+
+        return MessagesCollection.find({
+            receiverId: user._id,
+            read: false,
+        }).count();
+    });
+
     useEffect(() => {
         const userId = localStorage.getItem("Meteor.userId");
         const token = localStorage.getItem("Meteor.loginToken");
@@ -68,6 +87,10 @@ export const App = () => {
                 .then((userInfo) => {
                     if (userInfo) {
                         setUser({ _id: userId, username: userInfo.username });
+
+                        if (Notification.permission === "default") {
+                            setShowPermissionRequest(true);
+                        }
                     }
                 })
                 .catch((error) => {
@@ -75,7 +98,93 @@ export const App = () => {
                     handleLogout();
                 });
         }
+
+        const init = async () => {
+            const registration = await registerServiceWorker();
+
+            if (registration && navigator.serviceWorker) {
+                navigator.serviceWorker.addEventListener("message", (event) => {
+                    if (event.data && event.data.type === "BADGE_UPDATED") {
+                        if ("setAppBadge" in navigator && typeof navigator.setAppBadge === "function") {
+                            try {
+                                if (event.data.count > 0) {
+                                    navigator.setAppBadge(event.data.count);
+                                } else {
+                                    if ("clearAppBadge" in navigator && typeof navigator.clearAppBadge === "function") {
+                                        navigator.clearAppBadge();
+                                    }
+                                }
+                            } catch (error) {
+                                console.error("Erreur lors de la mise à jour directe du badge:", error);
+                            }
+                        }
+                    }
+                });
+            }
+
+            checkNotificationPermission();
+        };
+
+        init();
     }, []);
+
+    useEffect(() => {
+        initTabNotifications();
+    }, []);
+
+    useEffect(() => {
+        if (!user) return;
+
+        updateTabTitle(unreadMessagesCount, hasGroupActivity);
+
+        const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
+
+        const messagesChanged = unreadMessagesCount !== prevNotificationsRef.current.messages;
+        const groupsChanged = hasGroupActivity !== prevNotificationsRef.current.groups;
+        const notificationsChanged = messagesChanged || groupsChanged;
+
+        if (isInitialLoadRef.current) {
+            isInitialLoadRef.current = false;
+            prevNotificationsRef.current = {
+                messages: unreadMessagesCount,
+                groups: hasGroupActivity,
+            };
+            updateAppBadge(totalNotifications);
+            return;
+        }
+
+        if (notificationsChanged) {
+            updateAppBadge(totalNotifications);
+
+            prevNotificationsRef.current = {
+                messages: unreadMessagesCount,
+                groups: hasGroupActivity,
+            };
+
+            if (Notification.permission === "granted" && document.hidden) {
+                if (messagesChanged && unreadMessagesCount > 0) {
+                    showNotification(`${unreadMessagesCount} nouveau${unreadMessagesCount > 1 ? "x" : ""} message${unreadMessagesCount > 1 ? "s" : ""}`, {
+                        body: `Vous avez ${unreadMessagesCount} message${unreadMessagesCount > 1 ? "s non lus" : " non lu"}`,
+                        data: { url: "/", type: "messages" },
+                    });
+                }
+
+                if (groupsChanged && hasGroupActivity) {
+                    showNotification(`Activité dans vos groupes`, {
+                        body: `Vous avez de nouvelles activités dans vos groupes collaboratifs`,
+                        data: { url: "/", type: "groups" },
+                    });
+                }
+
+                if (totalNotifications > 0 && !messagesChanged && !groupsChanged) {
+                    showNotification(`${totalNotifications} notification${totalNotifications > 1 ? "s" : ""}`, {
+                        body: "Vous avez des notifications non lues",
+                        data: { url: "/" },
+                    });
+                }
+            }
+        }
+    }, [user, unreadMessagesCount, hasGroupActivity]);
 
     const handleLogout = () => {
         localStorage.removeItem("Meteor.userId");
@@ -114,17 +223,6 @@ export const App = () => {
         return TasksCollection.find(hideCompleted ? { ...hideCompletedFilter, groupId: { $exists: false } } : { groupId: { $exists: false } }, {
             sort: { createdAt: -1 },
         }).fetch();
-    });
-
-    const unreadMessagesCount = useTracker(() => {
-        if (!user || appMode === "chat") {
-            return 0;
-        }
-
-        return MessagesCollection.find({
-            receiverId: user._id,
-            read: false,
-        }).count();
     });
 
     if (!user) {
@@ -226,6 +324,7 @@ export const App = () => {
         <div className="app">
             <Navbar user={user} title={getTitle()} unreadMessagesCount={unreadMessagesCount} hasGroupActivity={hasGroupActivity} appMode={appMode} onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
             <div className="main">{renderContent()}</div>
+            {user && showPermissionRequest && <NotificationPermissionRequest />}
         </div>
     );
 };
