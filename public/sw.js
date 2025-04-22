@@ -1,6 +1,7 @@
 const CACHE_NAME = "todo-socket-v1";
 const urlsToCache = ["/", "/manifest.json", "/icons/app-icon.png"];
 
+// Variable pour stocker le nombre de notifications
 let notificationBadgeCount = 0;
 
 self.addEventListener("install", (event) => {
@@ -9,6 +10,13 @@ self.addEventListener("install", (event) => {
             return cache.addAll(urlsToCache);
         })
     );
+    // Force l'activation immédiate du service worker
+    self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+    // Prendre le contrôle immédiatement sans attendre le rechargement
+    event.waitUntil(clients.claim());
 });
 
 self.addEventListener("fetch", (event) => {
@@ -26,6 +34,7 @@ self.addEventListener("fetch", (event) => {
     );
 });
 
+// Écouter les messages de l'application principale
 self.addEventListener("message", (event) => {
     if (event.data && event.data.type === "UPDATE_BADGE") {
         notificationBadgeCount = event.data.count;
@@ -57,7 +66,9 @@ self.addEventListener("push", (event) => {
             badge: payload.badge || notificationBadgeCount || 1,
         },
         vibrate: [100, 50, 100],
-        tag: "notification",
+        tag: payload.tag || "notification",
+        renotify: true,
+        requireInteraction: true,
         actions: [
             {
                 action: "view",
@@ -72,14 +83,21 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
 
-    event.waitUntil(
-        clients.matchAll({ type: "window" }).then((clientList) => {
-            for (const client of clientList) {
-                if (client.url && "focus" in client) return client.focus();
-            }
-            if (clients.openWindow) {
-                return clients.openWindow(event.notification.data.url || "/");
-            }
-        })
-    );
+    // Action spécifique si l'utilisateur clique sur le bouton "Voir"
+    if (event.action === "view" || !event.action) {
+        event.waitUntil(
+            clients.matchAll({ type: "window" }).then((clientList) => {
+                // Si une fenêtre est déjà ouverte, la focus
+                for (const client of clientList) {
+                    if (client.url && "focus" in client) {
+                        return client.focus();
+                    }
+                }
+                // Sinon, ouvrir une nouvelle fenêtre
+                if (clients.openWindow) {
+                    return clients.openWindow(event.notification.data.url || "/");
+                }
+            })
+        );
+    }
 });

@@ -3,6 +3,8 @@ declare global {
     interface Navigator {
         setAppBadge?: (count: number) => Promise<void>;
         clearAppBadge?: () => Promise<void>;
+        setExperimentalAppBadge?: (count: number) => Promise<void>;
+        clearExperimentalAppBadge?: () => Promise<void>;
     }
 
     interface NotificationOptions {
@@ -10,6 +12,7 @@ declare global {
         badge?: string;
         silent?: boolean | null;
         data?: any;
+        actions?: { action: string, title: string }[];
     }
 }
 
@@ -58,7 +61,14 @@ export const showNotification = async (title: string, options: NotificationOptio
             ...options,
             badge: '/icons/app-icon.png',
             icon: '/icons/app-icon.png',
-            vibrate: [200, 100, 200]
+            vibrate: [200, 100, 200],
+            requireInteraction: true,
+            actions: [
+                {
+                    action: 'view',
+                    title: 'Voir'
+                }
+            ]
         });
         return true;
     } catch (error) {
@@ -66,43 +76,89 @@ export const showNotification = async (title: string, options: NotificationOptio
     }
 };
 
+// Cette fonction stocke le nombre de notifications actuel
 let currentBadgeCount = 0;
+// Flag pour savoir si on a affiché une notification pour forcer le badge
+let notificationShown = false;
 
 export const updateAppBadge = async (count: number) => {
     currentBadgeCount = count;
 
-    const badgingAPIAvailable = 'setAppBadge' in navigator && typeof navigator.setAppBadge === 'function';
+    // Si pas de notifications, réinitialiser l'état
+    if (count === 0) {
+        notificationShown = false;
+    }
 
-    if (badgingAPIAvailable) {
+    // Essayer d'abord avec l'API Badging standard (Chrome, Edge, Safari récent)
+    const standardBadgingAvailable = 'setAppBadge' in navigator && typeof navigator.setAppBadge === 'function';
+    const experimentalBadgingAvailable = 'setExperimentalAppBadge' in navigator &&
+        typeof navigator.setExperimentalAppBadge === 'function';
+
+    // Tentative avec l'API standard
+    if (standardBadgingAvailable) {
         try {
             if (count > 0 && navigator.setAppBadge) {
                 await navigator.setAppBadge(count);
+                return true;
             } else if (navigator.clearAppBadge) {
                 await navigator.clearAppBadge();
+                return true;
             }
-            return true;
         } catch (error) {
+            // Passer à la méthode suivante
         }
     }
 
-    if ('serviceWorker' in navigator && count > 0) {
+    // Tentative avec l'API expérimentale
+    if (experimentalBadgingAvailable) {
+        try {
+            if (count > 0 && navigator.setExperimentalAppBadge) {
+                await navigator.setExperimentalAppBadge(count);
+                return true;
+            } else if (navigator.clearExperimentalAppBadge) {
+                await navigator.clearExperimentalAppBadge();
+                return true;
+            }
+        } catch (error) {
+            // Passer à la méthode suivante
+        }
+    }
+
+    // Si l'API standard n'est pas disponible, utiliser le service worker pour les notifications
+    if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.ready;
 
+            // Mettre à jour un état dans le service worker pour indiquer le nombre de notifications
             if (registration.active) {
                 registration.active.postMessage({
                     type: 'UPDATE_BADGE',
                     count: count
                 });
 
+                // Envoyer une notification visible pour forcer l'apparition du badge sur certains appareils
                 const hasPermission = await checkNotificationPermission();
-                if (count > 0 && hasPermission) {
-                    await showNotification(`${count} nouvelles notifications`, {
-                        silent: true,
-                        data: { badge: count }
+                if (count > 0 && hasPermission && !notificationShown) {
+                    // Sur certains appareils, seule une notification visible forcera l'apparition d'un badge
+                    await showNotification(`${count} nouvelle${count > 1 ? 's' : ''} notification${count > 1 ? 's' : ''}`, {
+                        body: 'Cliquez pour voir vos notifications',
+                        data: { badge: count, url: '/' },
+                        silent: false,
+                        requireInteraction: false,  // Se ferme automatiquement
+                        tag: 'badge-notification' // Permet de remplacer une notification précédente
                     });
+                    notificationShown = true;
+                    return true;
                 }
-                return true;
+
+                // Si notification déjà montrée ou pas de notifications, simplement mettre à jour
+                if (count === 0) {
+                    // Effacer les notifications précédentes si le compteur est à zéro
+                    registration.getNotifications({ tag: 'badge-notification' })
+                        .then(notifications => {
+                            notifications.forEach(notification => notification.close());
+                        });
+                }
             }
         } catch (error) {
             return false;
@@ -112,6 +168,7 @@ export const updateAppBadge = async (count: number) => {
     return false;
 };
 
+// Fonction pour récupérer le nombre actuel de notifications
 export const getCurrentBadgeCount = () => {
     return currentBadgeCount;
 };
