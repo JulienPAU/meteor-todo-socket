@@ -130,9 +130,6 @@ meteor-todo-socket/
 1. **Inscription/Connexion** :
 
     - Créez un compte en utilisant le formulaire d'inscription
-    - Ou connectez-vous avec le compte de démonstration :
-        - Utilisateur : `demo`
-        - Mot de passe : `password123`
 
 2. **Gestion des tâches** :
 
