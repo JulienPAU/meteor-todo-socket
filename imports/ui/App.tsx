@@ -121,8 +121,10 @@ export const App = () => {
         // Calculer le nombre total de notifications
         const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
 
-        // Vérifier si les notifications ont changé depuis la dernière vérification
-        const notificationsChanged = unreadMessagesCount !== prevNotificationsRef.current.messages || hasGroupActivity !== prevNotificationsRef.current.groups;
+        // Vérifier si les notifications individuelles ont changé
+        const messagesChanged = unreadMessagesCount !== prevNotificationsRef.current.messages;
+        const groupsChanged = hasGroupActivity !== prevNotificationsRef.current.groups;
+        const notificationsChanged = messagesChanged || groupsChanged;
 
         // Ne pas déclencher de notifications lors du chargement initial
         if (isInitialLoadRef.current) {
@@ -145,11 +147,32 @@ export const App = () => {
                 groups: hasGroupActivity,
             };
 
-            if (totalNotifications > 0 && Notification.permission === "granted" && document.hidden) {
-                showNotification(`${totalNotifications} nouvelles notifications`, {
-                    body: unreadMessagesCount > 0 ? `Vous avez ${unreadMessagesCount} nouveaux messages` : "Vous avez une nouvelle activité de groupe",
-                    data: { url: "/" },
-                });
+            // Afficher une notification si nous avons la permission et que l'app est en arrière-plan
+            if (Notification.permission === "granted" && document.hidden) {
+                // Vérifier quelle notification a changé
+                if (messagesChanged && unreadMessagesCount > 0) {
+                    // Notification pour les messages privés
+                    showNotification(`${unreadMessagesCount} nouveau${unreadMessagesCount > 1 ? "x" : ""} message${unreadMessagesCount > 1 ? "s" : ""}`, {
+                        body: `Vous avez ${unreadMessagesCount} message${unreadMessagesCount > 1 ? "s non lus" : " non lu"}`,
+                        data: { url: "/", type: "messages" },
+                    });
+                }
+
+                // Notification spécifique pour l'activité de groupe si elle est apparue ou a changé
+                if (groupsChanged && hasGroupActivity) {
+                    showNotification(`Activité dans vos groupes`, {
+                        body: `Vous avez de nouvelles activités dans vos groupes collaboratifs`,
+                        data: { url: "/", type: "groups" },
+                    });
+                }
+
+                // Si aucune notification spécifique n'a été envoyée mais qu'il y a des notifications
+                if (totalNotifications > 0 && !messagesChanged && !groupsChanged) {
+                    showNotification(`${totalNotifications} notification${totalNotifications > 1 ? "s" : ""}`, {
+                        body: "Vous avez des notifications non lues",
+                        data: { url: "/" },
+                    });
+                }
             }
         }
     }, [user, unreadMessagesCount, hasGroupActivity]);
