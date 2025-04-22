@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { TasksCollection } from "/imports/api/TasksCollection";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
@@ -24,6 +24,12 @@ export const App = () => {
     const [showLogin, setShowLogin] = useState(true);
     const [appMode, setAppMode] = useState<AppMode>("tasks");
     const [showPermissionRequest, setShowPermissionRequest] = useState(false);
+
+    // Référence pour stocker l'état précédent des notifications
+    const prevNotificationsRef = useRef({ messages: 0, groups: false });
+
+    // État pour suivre si l'application vient d'être chargée
+    const isInitialLoadRef = useRef(true);
 
     const isTasksLoading = useSubscribe("tasks");
     const isMessagesLoading = useSubscribe("messages");
@@ -95,20 +101,49 @@ export const App = () => {
                 });
         }
 
+        // Enregistrer le service worker au démarrage
         registerServiceWorker();
         checkNotificationPermission();
     }, []);
 
+    // Initialiser le système de notification pour l'onglet au démarrage
     useEffect(() => {
         initTabNotifications();
     }, []);
 
+    // Mettre à jour le titre de l'onglet et le badge de l'application quand il y a des notifications
     useEffect(() => {
-        if (user) {
-            updateTabTitle(unreadMessagesCount, hasGroupActivity);
+        if (!user) return;
 
-            const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
+        // Mettre à jour le titre de l'onglet
+        updateTabTitle(unreadMessagesCount, hasGroupActivity);
+
+        // Calculer le nombre total de notifications
+        const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
+
+        // Vérifier si les notifications ont changé depuis la dernière vérification
+        const notificationsChanged = unreadMessagesCount !== prevNotificationsRef.current.messages || hasGroupActivity !== prevNotificationsRef.current.groups;
+
+        // Ne pas déclencher de notifications lors du chargement initial
+        if (isInitialLoadRef.current) {
+            isInitialLoadRef.current = false;
+            prevNotificationsRef.current = {
+                messages: unreadMessagesCount,
+                groups: hasGroupActivity,
+            };
             updateAppBadge(totalNotifications);
+            return;
+        }
+
+        // Mettre à jour le badge uniquement si les notifications ont changé
+        if (notificationsChanged) {
+            updateAppBadge(totalNotifications);
+
+            // Mettre à jour la référence
+            prevNotificationsRef.current = {
+                messages: unreadMessagesCount,
+                groups: hasGroupActivity,
+            };
 
             if (totalNotifications > 0 && Notification.permission === "granted" && document.hidden) {
                 showNotification(`${totalNotifications} nouvelles notifications`, {
