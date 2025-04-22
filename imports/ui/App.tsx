@@ -10,6 +10,7 @@ import { ChatContainer } from "./chat/ChatContainer";
 import { GroupsContainer } from "./groups/GroupsContainer";
 import { Navbar } from "./Navbar";
 import { NotificationPermissionRequest } from "./NotificationPermissionRequest";
+import { NotificationDebugger } from "./NotificationDebugger";
 import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
@@ -25,10 +26,8 @@ export const App = () => {
     const [appMode, setAppMode] = useState<AppMode>("tasks");
     const [showPermissionRequest, setShowPermissionRequest] = useState(false);
 
-    // Référence pour stocker l'état précédent des notifications
     const prevNotificationsRef = useRef({ messages: 0, groups: false });
 
-    // État pour suivre si l'application vient d'être chargée
     const isInitialLoadRef = useRef(true);
 
     const isTasksLoading = useSubscribe("tasks");
@@ -101,32 +100,50 @@ export const App = () => {
                 });
         }
 
-        // Enregistrer le service worker au démarrage
-        registerServiceWorker();
-        checkNotificationPermission();
+        const init = async () => {
+            const registration = await registerServiceWorker();
+
+            if (registration && navigator.serviceWorker) {
+                navigator.serviceWorker.addEventListener("message", (event) => {
+                    if (event.data && event.data.type === "BADGE_UPDATED") {
+                        console.log("Message reçu du Service Worker pour mise à jour de badge:", event.data.count);
+
+                        if ("setAppBadge" in navigator && typeof navigator.setAppBadge === "function") {
+                            try {
+                                if (event.data.count > 0) {
+                                    navigator.setAppBadge(event.data.count);
+                                } else {
+                                    navigator.clearAppBadge();
+                                }
+                            } catch (error) {
+                                console.error("Erreur lors de la mise à jour directe du badge:", error);
+                            }
+                        }
+                    }
+                });
+            }
+
+            checkNotificationPermission();
+        };
+
+        init();
     }, []);
 
-    // Initialiser le système de notification pour l'onglet au démarrage
     useEffect(() => {
         initTabNotifications();
     }, []);
 
-    // Mettre à jour le titre de l'onglet et le badge de l'application quand il y a des notifications
     useEffect(() => {
         if (!user) return;
 
-        // Mettre à jour le titre de l'onglet
         updateTabTitle(unreadMessagesCount, hasGroupActivity);
 
-        // Calculer le nombre total de notifications
         const totalNotifications = unreadMessagesCount + (hasGroupActivity ? 1 : 0);
 
-        // Vérifier si les notifications individuelles ont changé
         const messagesChanged = unreadMessagesCount !== prevNotificationsRef.current.messages;
         const groupsChanged = hasGroupActivity !== prevNotificationsRef.current.groups;
         const notificationsChanged = messagesChanged || groupsChanged;
 
-        // Ne pas déclencher de notifications lors du chargement initial
         if (isInitialLoadRef.current) {
             isInitialLoadRef.current = false;
             prevNotificationsRef.current = {
@@ -137,28 +154,22 @@ export const App = () => {
             return;
         }
 
-        // Mettre à jour le badge uniquement si les notifications ont changé
         if (notificationsChanged) {
             updateAppBadge(totalNotifications);
 
-            // Mettre à jour la référence
             prevNotificationsRef.current = {
                 messages: unreadMessagesCount,
                 groups: hasGroupActivity,
             };
 
-            // Afficher une notification si nous avons la permission et que l'app est en arrière-plan
             if (Notification.permission === "granted" && document.hidden) {
-                // Vérifier quelle notification a changé
                 if (messagesChanged && unreadMessagesCount > 0) {
-                    // Notification pour les messages privés
                     showNotification(`${unreadMessagesCount} nouveau${unreadMessagesCount > 1 ? "x" : ""} message${unreadMessagesCount > 1 ? "s" : ""}`, {
                         body: `Vous avez ${unreadMessagesCount} message${unreadMessagesCount > 1 ? "s non lus" : " non lu"}`,
                         data: { url: "/", type: "messages" },
                     });
                 }
 
-                // Notification spécifique pour l'activité de groupe si elle est apparue ou a changé
                 if (groupsChanged && hasGroupActivity) {
                     showNotification(`Activité dans vos groupes`, {
                         body: `Vous avez de nouvelles activités dans vos groupes collaboratifs`,
@@ -166,7 +177,6 @@ export const App = () => {
                     });
                 }
 
-                // Si aucune notification spécifique n'a été envoyée mais qu'il y a des notifications
                 if (totalNotifications > 0 && !messagesChanged && !groupsChanged) {
                     showNotification(`${totalNotifications} notification${totalNotifications > 1 ? "s" : ""}`, {
                         body: "Vous avez des notifications non lues",
@@ -316,6 +326,7 @@ export const App = () => {
             <Navbar user={user} title={getTitle()} unreadMessagesCount={unreadMessagesCount} hasGroupActivity={hasGroupActivity} appMode={appMode} onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
             <div className="main">{renderContent()}</div>
             {user && showPermissionRequest && <NotificationPermissionRequest />}
+            <NotificationDebugger />
         </div>
     );
 };

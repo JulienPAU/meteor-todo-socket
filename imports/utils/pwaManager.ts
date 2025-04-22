@@ -23,8 +23,10 @@ export const registerServiceWorker = async () => {
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log('Service Worker enregistré avec succès:', registration);
             return registration;
         } catch (error) {
+            console.error('Erreur d\'enregistrement du Service Worker:', error);
             return null;
         }
     }
@@ -33,23 +35,28 @@ export const registerServiceWorker = async () => {
 
 export const checkNotificationPermission = async () => {
     if (!('Notification' in window)) {
+        console.log('Les notifications ne sont pas supportées sur ce navigateur');
         return false;
     }
 
     if (Notification.permission === 'granted') {
+        console.log('Permission de notification déjà accordée');
         return true;
     }
 
     if (Notification.permission !== 'denied') {
         const permission = await Notification.requestPermission();
+        console.log('Résultat de la demande de permission:', permission);
         return permission === 'granted';
     }
 
+    console.log('Permission de notification refusée précédemment');
     return false;
 };
 
 export const showNotification = async (title: string, options: NotificationOptions) => {
     if (!('serviceWorker' in navigator)) {
+        console.log('Service Worker non supporté');
         return false;
     }
 
@@ -57,6 +64,7 @@ export const showNotification = async (title: string, options: NotificationOptio
         const swRegistration = await navigator.serviceWorker.ready;
 
         if (!swRegistration) {
+            console.log('Service Worker non disponible');
             return false;
         }
 
@@ -66,122 +74,101 @@ export const showNotification = async (title: string, options: NotificationOptio
             icon: '/icons/app-icon.png',
             vibrate: [200, 100, 200]
         });
+        console.log('Notification affichée avec succès');
         return true;
     } catch (error) {
+        console.error('Erreur d\'affichage de notification:', error);
         return false;
     }
 };
 
-// Cette fonction stocke le nombre de notifications actuel
 let currentBadgeCount = 0;
-// Flag pour éviter d'afficher des notifications en boucle
-let lastNotificationTime = 0;
-const NOTIFICATION_COOLDOWN = 60000; // 1 minute entre les notifications
 
 export const updateAppBadge = async (count: number) => {
-    // Si le nombre n'a pas changé, ne rien faire
+    console.log('Mise à jour du badge avec le compteur:', count);
+
     if (currentBadgeCount === count) {
+        console.log('Compteur de badge inchangé, aucune action nécessaire');
         return true;
     }
 
     currentBadgeCount = count;
 
-    // Essayer d'abord avec l'API Badging standard (Chrome, Edge, Safari récent)
+    // Vérifier si les API de badge sont disponibles
     const standardBadgingAvailable = 'setAppBadge' in navigator && typeof navigator.setAppBadge === 'function';
     const experimentalBadgingAvailable = 'setExperimentalAppBadge' in navigator &&
         typeof navigator.setExperimentalAppBadge === 'function';
 
-    // Tentative avec l'API standard
+    console.log('API de badge standard disponible:', standardBadgingAvailable);
+    console.log('API de badge expérimental disponible:', experimentalBadgingAvailable);
+
+    // Essayer d'abord l'API standard
     if (standardBadgingAvailable) {
         try {
             if (count > 0 && navigator.setAppBadge) {
                 await navigator.setAppBadge(count);
+                console.log('Badge défini avec l\'API standard');
                 return true;
             } else if (navigator.clearAppBadge) {
                 await navigator.clearAppBadge();
+                console.log('Badge effacé avec l\'API standard');
                 return true;
             }
         } catch (error) {
-            // Continuer avec la méthode suivante
+            console.error('Erreur avec l\'API standard de badge:', error);
         }
     }
 
-    // Tentative avec l'API expérimentale
+    // Si l'API standard échoue, essayer l'API expérimentale
     if (experimentalBadgingAvailable) {
         try {
             if (count > 0 && navigator.setExperimentalAppBadge) {
                 await navigator.setExperimentalAppBadge(count);
+                console.log('Badge défini avec l\'API expérimentale');
                 return true;
             } else if (navigator.clearExperimentalAppBadge) {
                 await navigator.clearExperimentalAppBadge();
+                console.log('Badge effacé avec l\'API expérimentale');
                 return true;
             }
         } catch (error) {
-            // Continuer avec la méthode suivante
+            console.error('Erreur avec l\'API expérimentale de badge:', error);
         }
     }
 
-    // Si l'API standard n'est pas disponible, utiliser le service worker pour les notifications
-    if ('serviceWorker' in navigator && document.hidden) {
+    // Fallback au service worker si les deux APIs échouent
+    if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.ready;
 
-            // Mettre à jour un état dans le service worker pour indiquer le nombre de notifications
             if (registration.active) {
                 registration.active.postMessage({
                     type: 'UPDATE_BADGE',
                     count: count
                 });
-
-                // Vérifier si nous sommes en période de refroidissement
-                const now = Date.now();
-                if (now - lastNotificationTime < NOTIFICATION_COOLDOWN) {
-                    return false;
-                }
-
-                // Envoyer une notification visible uniquement si:
-                // 1. On a des notifications
-                // 2. On a la permission
-                // 3. L'utilisateur n'est pas sur l'app
-                // 4. Assez de temps s'est écoulé depuis la dernière notification
-                const hasPermission = await checkNotificationPermission();
-                if (count > 0 && hasPermission && document.hidden) {
-                    // Fermer les notifications existantes pour éviter l'accumulation
-                    const oldNotifications = await registration.getNotifications({
-                        tag: 'badge-notification'
-                    });
-                    oldNotifications.forEach(notification => notification.close());
-
-                    // Créer une nouvelle notification
-                    await showNotification(`${count} nouvelle${count > 1 ? 's' : ''} notification${count > 1 ? 's' : ''}`, {
-                        body: 'Cliquez pour voir vos notifications',
-                        data: { badge: count, url: '/' },
-                        tag: 'badge-notification', // Assure qu'une seule notification est affichée
-                        renotify: false
-                    });
-
-                    // Mettre à jour le timestamp de la dernière notification
-                    lastNotificationTime = now;
-                    return true;
-                }
-
-                // Si pas de notifications, effacer les notifications précédentes
-                if (count === 0) {
-                    registration.getNotifications({ tag: 'badge-notification' })
-                        .then(notifications => {
-                            notifications.forEach(notification => notification.close());
-                        });
-                }
+                console.log('Message de mise à jour de badge envoyé au Service Worker');
+                return true;
+            } else {
+                console.log('Service Worker actif non disponible pour la mise à jour du badge');
             }
         } catch (error) {
-            return false;
+            console.error('Erreur lors de la communication avec le Service Worker:', error);
         }
+    } else {
+        console.log('Service Worker non supporté pour la mise à jour du badge');
+    }
+
+    // Dans le cas où toutes les méthodes échouent, mettre à jour le titre de la page
+    if (count > 0) {
+        const originalTitle = document.title.replace(/^\(\d+\)\s/, '');
+        document.title = `(${count}) ${originalTitle}`;
+        console.log('Mise à jour du titre de la page comme fallback');
+        return true;
     }
 
     return false;
 };
 
-// Fonction pour récupérer le nombre actuel de notifications
 export const getCurrentBadgeCount = () => {
     return currentBadgeCount;
 };
