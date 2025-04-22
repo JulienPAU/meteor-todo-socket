@@ -21,9 +21,6 @@ const hashPassword = (password: string): string => {
     .toString();
 };
 
-const SEED_USERNAME = "demo";
-const SEED_PASSWORD = "password123";
-
 const isRailwayEnvironment = (): boolean => {
   return (
     !!process.env.RAILWAY_ENVIRONMENT ||
@@ -59,33 +56,20 @@ const resetDatabase = async (): Promise<void> => {
     console.log(`✅ ${tasksCount} tâches supprimées`);
   }
 
-  const usersCount = await Meteor.users
-    .find({ username: { $ne: SEED_USERNAME } })
-    .countAsync();
+  const usersCount = await Meteor.users.find().countAsync();
   if (usersCount > 0) {
-    await Meteor.users.removeAsync({ username: { $ne: SEED_USERNAME } });
+    await Meteor.users.removeAsync({});
     console.log(`✅ ${usersCount} utilisateurs supprimés`);
   }
 
-  const credentialsCount = await UsersCredentialsCollection.find({
-    username: { $ne: SEED_USERNAME }
-  }).countAsync();
+  const credentialsCount = await UsersCredentialsCollection.find().countAsync();
   if (credentialsCount > 0) {
-    await UsersCredentialsCollection.removeAsync({
-      username: { $ne: SEED_USERNAME }
-    });
+    await UsersCredentialsCollection.removeAsync({});
     console.log(`✅ ${credentialsCount} identifications supprimées`);
   }
 
   console.log("🎉 Réinitialisation de la base de données terminée!");
 };
-
-const insertTask = (taskText: string, userId: string) =>
-  TasksCollection.insertAsync({
-    text: taskText,
-    userId,
-    createdAt: new Date()
-  });
 
 Meteor.startup(async () => {
   if (isRailwayEnvironment() || process.env.RESET_DATABASE === "true" || process.env.RESET_DATABASE === "1") {
@@ -125,62 +109,6 @@ Meteor.startup(async () => {
       read: false
     });
     console.log("Collection messages initialisée");
-  }
-
-  const existingUser = await Meteor.users.findOneAsync({
-    username: SEED_USERNAME
-  });
-  const existingCredentials = await UsersCredentialsCollection.findOneAsync({
-    username: SEED_USERNAME
-  });
-
-  let userId: string | null = null;
-
-  if (!existingUser && existingCredentials) {
-    console.log(`Suppression des identifiants orphelins pour l'utilisateur: ${SEED_USERNAME}`);
-    await UsersCredentialsCollection.removeAsync({ username: SEED_USERNAME });
-  }
-
-  if (existingUser && !existingCredentials) {
-    console.log(`Suppression de l'utilisateur orphelin: ${SEED_USERNAME}`);
-    await Meteor.users.removeAsync({ username: SEED_USERNAME });
-  }
-
-  const syncedUser = await Meteor.users.findOneAsync({
-    username: SEED_USERNAME
-  });
-
-  if (!syncedUser) {
-    console.log(`Création du compte de démonstration: ${SEED_USERNAME}`);
-    userId = await Meteor.users.insertAsync({
-      username: SEED_USERNAME,
-      profile: { name: "Utilisateur Démo" },
-      createdAt: new Date()
-    });
-
-    await UsersCredentialsCollection.insertAsync({
-      username: SEED_USERNAME,
-      hashedPassword: hashPassword(SEED_PASSWORD),
-      createdAt: new Date()
-    });
-  } else {
-    userId = syncedUser._id;
-  }
-
-  if (userId) {
-    const tasksCount = await TasksCollection.find({ userId }).countAsync();
-
-    if (tasksCount === 0) {
-      console.log("Création des tâches par défaut...");
-      [
-        "Bienvenue dans l'application Todo",
-        "Cliquez sur la case à cocher pour marquer comme terminé",
-        "Cliquez sur × pour supprimer une tâche",
-        "Entrez du texte et cliquez sur Ajouter pour créer une tâche",
-        "Cette application est construite avec Meteor et React"
-      ].forEach((text) => insertTask(text, userId as string));
-      console.log("Tâches par défaut créées.");
-    }
   }
 });
 

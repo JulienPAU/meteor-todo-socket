@@ -10,7 +10,6 @@ import { ChatContainer } from "./chat/ChatContainer";
 import { GroupsContainer } from "./groups/GroupsContainer";
 import { Navbar } from "./Navbar";
 import { NotificationPermissionRequest } from "./NotificationPermissionRequest";
-import { NotificationDebugger } from "./NotificationDebugger";
 import { Meteor } from "meteor/meteor";
 import { User } from "/imports/types/user";
 import { Task } from "/imports/types/task";
@@ -106,14 +105,14 @@ export const App = () => {
             if (registration && navigator.serviceWorker) {
                 navigator.serviceWorker.addEventListener("message", (event) => {
                     if (event.data && event.data.type === "BADGE_UPDATED") {
-                        console.log("Message reçu du Service Worker pour mise à jour de badge:", event.data.count);
-
                         if ("setAppBadge" in navigator && typeof navigator.setAppBadge === "function") {
                             try {
                                 if (event.data.count > 0) {
                                     navigator.setAppBadge(event.data.count);
                                 } else {
-                                    navigator.clearAppBadge();
+                                    if ("clearAppBadge" in navigator && typeof navigator.clearAppBadge === "function") {
+                                        navigator.clearAppBadge();
+                                    }
                                 }
                             } catch (error) {
                                 console.error("Erreur lors de la mise à jour directe du badge:", error);
@@ -326,7 +325,6 @@ export const App = () => {
             <Navbar user={user} title={getTitle()} unreadMessagesCount={unreadMessagesCount} hasGroupActivity={hasGroupActivity} appMode={appMode} onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
             <div className="main">{renderContent()}</div>
             {user && showPermissionRequest && <NotificationPermissionRequest />}
-            <NotificationDebugger />
         </div>
     );
 };
