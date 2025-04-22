@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { useTracker } from "meteor/react-meteor-data";
+import React from "react";
+import { useTracker, useSubscribe } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Group } from "/imports/types/group";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
 import { formatDate } from "/imports/utils/validators";
+import { MessagesCollection } from "/imports/api/MessagesCollection";
+import { TasksCollection } from "/imports/api/TasksCollection";
 
 interface GroupsListProps {
     onSelectGroup: (groupId: string, groupName: string) => void;
@@ -12,53 +14,55 @@ interface GroupsListProps {
     currentUserId: string;
 }
 
-export const GroupsList = ({ onSelectGroup, selectedGroupId, onCreateGroup }: GroupsListProps) => {
-    const { isLoading, groups } = useTracker(() => {
-        const groupsReady = Meteor.subscribe("groups").ready();
+export const GroupsList = ({ onSelectGroup, selectedGroupId, onCreateGroup, currentUserId }: GroupsListProps) => {
+    useSubscribe("groups");
+    useSubscribe("messages");
+    useSubscribe("tasks.allGroupTasks");
+    useSubscribe("groupMessages.all");
 
-        if (!groupsReady) {
+    const { isLoading, groups, groupNotifications } = useTracker(() => {
+        const groupsReady = Meteor.subscribe("groups").ready();
+        const messagesReady = Meteor.subscribe("messages").ready();
+        const tasksReady = Meteor.subscribe("tasks.allGroupTasks").ready();
+        const groupMessagesReady = Meteor.subscribe("groupMessages.all").ready();
+
+        if (!groupsReady || !messagesReady || !tasksReady || !groupMessagesReady) {
             return {
                 isLoading: true,
                 groups: [],
+                groupNotifications: {},
             };
         }
 
-        const groups = GroupsCollection.find({ "members.userId": Meteor.userId() }, { sort: { createdAt: -1 } }).fetch();
+        const groups = GroupsCollection.find({ "members.userId": currentUserId }, { sort: { createdAt: -1 } }).fetch();
+
+        const notifications: Record<string, boolean> = {};
+
+        groups.forEach((group) => {
+            const groupId = group._id as string;
+
+            const unreadMessages =
+                MessagesCollection.find({
+                    groupId: groupId,
+                    senderId: { $ne: currentUserId },
+                    $or: [{ readBy: { $exists: false } }, { readBy: { $ne: currentUserId } }],
+                }).count() > 0;
+
+            const pendingTasks =
+                TasksCollection.find({
+                    groupId: groupId,
+                    isChecked: { $ne: true },
+                }).count() > 0;
+
+            notifications[groupId] = unreadMessages || pendingTasks;
+        });
 
         return {
             isLoading: false,
             groups,
+            groupNotifications: notifications,
         };
-    }, []);
-
-    const [groupNotifications, setGroupNotifications] = useState<Record<string, boolean>>({});
-
-    useEffect(() => {
-        if (isLoading || !groups.length) return;
-
-        const checkGroupsActivity = async () => {
-            try {
-                const result = await Meteor.callAsync("messages.checkGroupActivity");
-                if (result && result.groupsWithActivity) {
-                    const notifications: Record<string, boolean> = {};
-
-                    for (const groupId of result.groupsWithActivity) {
-                        notifications[groupId] = true;
-                    }
-
-                    setGroupNotifications(notifications);
-                }
-            } catch (error) {
-                console.error("Erreur lors de la vérification des activités:", error);
-            }
-        };
-
-        checkGroupsActivity();
-
-        const intervalId = setInterval(checkGroupsActivity, 5000);
-
-        return () => clearInterval(intervalId);
-    }, [isLoading, groups]);
+    }, [currentUserId]);
 
     const handleDeleteGroup = (groupId: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -94,8 +98,8 @@ export const GroupsList = ({ onSelectGroup, selectedGroupId, onCreateGroup }: Gr
             ) : (
                 <div className="groups-list">
                     {groups.map((group: Group) => {
-                        const userId = Meteor.userId();
-                        const isAdmin = userId ? group.members.some((member) => member.userId === userId && member.role === "admin") : false;
+                        const userId = currentUserId;
+                        const isAdmin = group.members.some((member) => member.userId === userId && member.role === "admin");
 
                         return (
                             <div key={group._id} className={`group-item ${selectedGroupId === group._id ? "active" : ""}`} onClick={() => onSelectGroup(group._id!, group.name)}>
