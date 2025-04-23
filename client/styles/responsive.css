@@ -11,17 +11,172 @@
         padding: 12px;
     }
 
-    .task-checkbox {
-        margin-right: 6px !important;
-    }
-
     .tasks > li > span {
         padding: 0 4px !important;
         font-size: 1em !important;
     }
 }
 
+/* Styles mobiles généraux */
+@media screen and (max-width: 767px) {
+    .task-form-container,
+    .filter {
+        display: none !important;
+    }
+
+    /* Style pour le mode groupe en mobile */
+    .groups-container.mobile-group-active .groups-sidebar {
+        display: none;
+    }
+
+    .groups-container.mobile-group-active .group-header {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 10;
+        padding: 0.5rem;
+    }
+
+    .groups-container.mobile-group-active .group-header h2 {
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+        display: inline-block;
+    }
+
+    .back-to-groups-btn {
+        background-color: var(--accent-color);
+        color: black;
+        border: none;
+        border-radius: 4px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2); /* Ajoute une ombre au texte pour meilleure lisibilité */
+    }
+
+    .back-to-groups-btn:hover {
+        background-color: var(--accent-hover);
+    }
+
+    .back-to-groups-btn svg {
+        margin-right: 0.3rem; /* Marge entre l'icône et le texte */
+    }
+
+    .mobile-add-task-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        font-size: 24px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .mobile-add-task-button:hover,
+    .mobile-add-task-button:focus {
+        background-color: var(--primary-color-light);
+        transform: scale(1.1);
+    }
+
+    .mobile-add-task-button:active {
+        transform: scale(0.95);
+    }
+
+    /* Position spéciale pour le bouton d'ajout dans les groupes */
+    .group-mobile-add-task-button {
+        bottom: 80px;
+    }
+
+    /* Style pour la modale d'ajout de tâche */
+    .add-task-modal {
+        width: 90%;
+        max-width: 400px;
+        padding: 1rem;
+    }
+
+    .add-task-modal .modal-field {
+        margin-bottom: 1rem;
+    }
+
+    .add-task-modal input {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Bouton mobile pour masquer/afficher les tâches terminées */
+    .mobile-visibility-toggle {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--secondary-color);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .mobile-visibility-toggle:hover,
+    .mobile-visibility-toggle:focus {
+        background-color: var(--secondary-color-dark);
+    }
+
+    /* Position spéciale pour le bouton de visibilité des tâches dans les groupes */
+    .group-mobile-visibility-toggle {
+        bottom: 80px;
+    }
+
+    /* Style pour les icônes d'œil */
+    .mobile-visibility-toggle img {
+        width: 28px;
+        height: 28px;
+        filter: brightness(0) invert(1); /* Pour rendre l'icône blanche */
+    }
+
+    /* Agrandir un peu le texte des emojis utilisés comme icônes */
+    .mobile-visibility-toggle span[role="img"] {
+        font-size: 20px;
+    }
+
+    /* Ajout de marge au bas des listes pour éviter que les tâches ne soient masquées par les boutons flottants */
+    .tasks {
+        margin-bottom: 80px;
+    }
+
+    /* Ajustement pour les groupes avec plus de boutons */
+    .group-tasks-container .tasks {
+        margin-bottom: 140px;
+    }
+}
+
 @media (min-width: 768px) {
+    /* Cache le bouton de retour aux groupes sur les écrans larges */
+    .back-to-groups-btn {
+        display: none;
+    }
+
     .chat-container {
         flex-direction: row;
     }
@@ -52,5 +207,11 @@
 
     .chat-tab:hover {
         background-color: var(--primary-color-light);
+    }
+
+    /* En desktop, on masque les contrôles mobiles */
+    .mobile-add-task-button,
+    .mobile-visibility-toggle {
+        display: none;
     }
 }

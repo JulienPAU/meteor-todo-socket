@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import Sortable from "sortablejs";
@@ -7,17 +7,32 @@ import { TasksCollection } from "../../api/TasksCollection";
 import type { Task as TaskType } from "../../types/task";
 import { Task } from "../Task";
 import { TaskForm } from "../TaskForm";
+import { AddTaskModal } from "../AddTaskModal";
 
 interface GroupTasksProps {
     groupId: string;
     currentUserId: string;
     onVisibilityChange?: (showAll: boolean) => void;
+    disableMobileControls?: boolean;
 }
 
-export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: GroupTasksProps) => {
+// Définir l'interface exposée via ref
+export interface GroupTasksRefHandle {
+    toggleHideCompleted: () => void;
+}
+
+export const GroupTasks = forwardRef<GroupTasksRefHandle, GroupTasksProps>(({ groupId, currentUserId, onVisibilityChange, disableMobileControls = false }, ref) => {
     const [hideCompleted, setHideCompleted] = useState(false);
+    const [showAddTaskModal, setShowAddTaskModal] = useState(false);
     const groupTasksListRef = useRef<HTMLUListElement>(null);
     const sortableRef = useRef<Sortable | null>(null);
+
+    // Exposer la méthode toggleHideCompleted via ref
+    useImperativeHandle(ref, () => ({
+        toggleHideCompleted: () => {
+            toggleHideCompleted();
+        },
+    }));
 
     const { tasks, pendingTasksCount, isLoading } = useTracker(() => {
         const noDataAvailable = {
@@ -112,11 +127,8 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
 
     return (
         <div className="group-tasks-container">
-            <h3>Tâches collaboratives</h3>
-
-            <TaskForm groupId={groupId} />
-
             <div className="filter">
+                <TaskForm groupId={groupId} />
                 <button type="button" onClick={toggleHideCompleted}>
                     {hideCompleted ? "Montrer toutes les tâches" : "Masquer les tâches terminées"}
                 </button>
@@ -142,6 +154,19 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
                     <p>{hideCompleted ? "Toutes les tâches ont été complétées !" : "Utilisez le formulaire ci-dessus pour ajouter votre première tâche collaborative!"}</p>
                 </div>
             )}
+
+            {!disableMobileControls && showAddTaskModal && <AddTaskModal isOpen={true} onClose={() => setShowAddTaskModal(false)} groupId={groupId} />}
+
+            {!disableMobileControls && (
+                <>
+                    <button className="mobile-add-task-button group-mobile-add-task-button" onClick={() => setShowAddTaskModal(true)}>
+                        +
+                    </button>
+                    <button className="mobile-visibility-toggle group-mobile-visibility-toggle" onClick={toggleHideCompleted} title={hideCompleted ? "Afficher toutes les tâches" : "Masquer les tâches terminées"}>
+                        <img src={hideCompleted ? "/icons/eye/open.png" : "/icons/eye/closed.png"} alt={hideCompleted ? "Afficher toutes les tâches" : "Masquer les tâches terminées"} />
+                    </button>
+                </>
+            )}
         </div>
     );
-};
+});

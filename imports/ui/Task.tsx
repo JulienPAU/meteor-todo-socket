@@ -287,20 +287,7 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
             <li className={`${task.isChecked ? "checked" : ""} ${task.isUrgent ? "urgent" : ""}`} data-id={task._id}>
                 {!isEditing ? (
                     <>
-                        <div className="drag-handle">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                                <circle cx="5" cy="4" r="2.5" fill="currentColor" />
-                                <circle cx="12" cy="4" r="2.5" fill="currentColor" />
-                                <circle cx="19" cy="4" r="2.5" fill="currentColor" />
-                                <circle cx="5" cy="12" r="2.5" fill="currentColor" />
-                                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-                                <circle cx="19" cy="12" r="2.5" fill="currentColor" />
-                                <circle cx="5" cy="20" r="2.5" fill="currentColor" />
-                                <circle cx="12" cy="20" r="2.5" fill="currentColor" />
-                                <circle cx="19" cy="20" r="2.5" fill="currentColor" />
-                            </svg>
-                        </div>
-                        <span className={task.isChecked ? "text-completed" : ""}>
+                        <span>
                             <div className="task-edit-area" onClick={handleTaskTextClick} onKeyDown={handleKeyPress} role="button" tabIndex={0}>
                                 <div className="task-content">
                                     {task.isUrgent && (
@@ -308,7 +295,7 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
                                             ⚠️
                                         </span>
                                     )}
-                                    <span className="task-text">{task.text}</span>
+                                    <span className={task.isChecked ? "task-text text-completed" : "task-text"}>{task.text}</span>
                                 </div>
                                 {showCreator && task.createdBy && (
                                     <div className="task-creator">
@@ -316,16 +303,30 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
                                     </div>
                                 )}
                             </div>
+
+                            <div className="task-controls">
+                                <button onClick={handleToggleUrgent} className={`urgent-btn ${task.isUrgent ? "active" : ""}`} type="button" title={task.isUrgent ? "Retirer l'urgence" : "Marquer comme urgent"}>
+                                    <img src="/icons/siren.png" alt="Urgence" className="urgent-icon" />
+                                </button>
+                                <input type="checkbox" checked={!!task.isChecked} onClick={handleCheckboxClick} onChange={() => {}} className="task-checkbox" />
+                                <button onClick={handleDeleteClick} className="delete-btn" type="button">
+                                    &times;
+                                </button>
+                                <div className="drag-handle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                        <circle cx="5" cy="4" r="2.5" fill="currentColor" />
+                                        <circle cx="12" cy="4" r="2.5" fill="currentColor" />
+                                        <circle cx="19" cy="4" r="2.5" fill="currentColor" />
+                                        <circle cx="5" cy="12" r="2.5" fill="currentColor" />
+                                        <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                                        <circle cx="19" cy="12" r="2.5" fill="currentColor" />
+                                        <circle cx="5" cy="20" r="2.5" fill="currentColor" />
+                                        <circle cx="12" cy="20" r="2.5" fill="currentColor" />
+                                        <circle cx="19" cy="20" r="2.5" fill="currentColor" />
+                                    </svg>
+                                </div>
+                            </div>
                         </span>
-                        <div className="task-controls">
-                            <button onClick={handleToggleUrgent} className={`urgent-btn ${task.isUrgent ? "active" : ""}`} type="button" title={task.isUrgent ? "Retirer l'urgence" : "Marquer comme urgent"}>
-                                <img src="/icons/siren.png" alt="Urgence" className="urgent-icon" />
-                            </button>
-                            <input type="checkbox" checked={!!task.isChecked} onClick={handleCheckboxClick} onChange={() => {}} className="task-checkbox" />
-                            <button onClick={handleDeleteClick} className="delete-btn" type="button">
-                                &times;
-                            </button>
-                        </div>
 
                         {Array.isArray(userEditingThisTask)
                             ? userEditingThisTask.length > 0 &&

@@ -4,6 +4,7 @@ import { TasksCollection } from "/imports/api/TasksCollection";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
 import { Task as TaskComponent } from "./Task";
 import { TaskForm } from "./TaskForm";
+import { AddTaskModal } from "./AddTaskModal";
 import { LoginForm } from "./auth/LoginForm";
 import { RegisterForm } from "./auth/RegisterForm";
 import { ChatContainer } from "./chat/ChatContainer";
@@ -25,6 +26,7 @@ export const App = () => {
     const [showLogin, setShowLogin] = useState(true);
     const [appMode, setAppMode] = useState<AppMode>("tasks");
     const [showPermissionRequest, setShowPermissionRequest] = useState(false);
+    const [showAddTaskModal, setShowAddTaskModal] = useState(false);
 
     const prevNotificationsRef = useRef({ messages: 0, groups: false });
     const isInitialLoadRef = useRef(true);
@@ -329,9 +331,9 @@ export const App = () => {
             default:
                 return (
                     <>
-                        <TaskForm />
-
+                        <h2 className="task-title"> Mes tâches</h2>
                         <div className="filter">
+                            <TaskForm />
                             <button onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? "Afficher tout" : "Masquer les tâches terminées"}</button>
                         </div>
 
@@ -363,6 +365,19 @@ export const App = () => {
             <Navbar user={user} title={getTitle()} unreadMessagesCount={unreadMessagesCount} hasGroupActivity={hasGroupActivity} appMode={appMode} onToggleChat={toggleChat} onToggleGroups={toggleGroups} onLogout={handleLogout} />
             <div className="main">{renderContent()}</div>
             {user && showPermissionRequest && <NotificationPermissionRequest />}
+
+            {/* N'afficher les contrôles mobiles que dans la vue des tâches personnelles */}
+            {appMode === "tasks" && (
+                <>
+                    {showAddTaskModal && <AddTaskModal isOpen={true} onClose={() => setShowAddTaskModal(false)} />}
+                    <button className="mobile-add-task-button" onClick={() => setShowAddTaskModal(true)}>
+                        +
+                    </button>
+                    <button className="mobile-visibility-toggle" onClick={() => setHideCompleted(!hideCompleted)} title={hideCompleted ? "Afficher toutes les tâches" : "Masquer les tâches terminées"}>
+                        <img src={hideCompleted ? "/icons/eye/open.png" : "/icons/eye/closed.png"} alt={hideCompleted ? "Afficher toutes les tâches" : "Masquer les tâches terminées"} />
+                    </button>
+                </>
+            )}
         </div>
     );
 };

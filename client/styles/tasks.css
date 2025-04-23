@@ -38,7 +38,6 @@
 
 .task-form-container {
     position: relative;
-    margin-bottom: 20px;
 }
 
 .typing-indicator {
@@ -64,8 +63,6 @@
     justify-content: center;
     align-items: center;
     gap: 12px;
-    padding: 16px;
-    margin-bottom: 10px;
 }
 
 .filter > button {
@@ -207,8 +204,9 @@
 .task-controls {
     display: flex;
     align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    gap: 10px;
+    gap: 2rem;
     margin-left: auto;
 }
 
@@ -222,6 +220,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     min-width: 0;
 }
 
@@ -416,6 +415,7 @@
     display: flex;
     padding: 16px;
     border-radius: 8px;
+    margin-top: 5px;
     margin-bottom: 10px;
     align-items: center;
     background-color: var(--task-bg);
@@ -424,6 +424,11 @@
     flex-wrap: wrap;
     justify-content: flex-start;
     cursor: pointer;
+}
+
+.task-title {
+    text-align: center;
+    margin: 0.5rem;
 }
 
 .task-content {
@@ -462,6 +467,9 @@
         flex: 1 0 calc(100% - 40px);
         justify-content: center;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+
         padding: 2px 0;
         margin-bottom: 5px;
     }
@@ -474,7 +482,9 @@
         flex: 0 0 100%;
         justify-content: center;
         margin: 8px 0 0 0;
-        gap: 15px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
     .filter {
@@ -485,12 +495,6 @@
         flex: 1;
     }
 
-    .task-controls {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
     .task-checkbox {
         width: 20px;
         height: 20px;
@@ -498,9 +502,9 @@
     }
 
     .tasks > li button.delete-btn {
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
         font-size: 0.9em;
     }
 

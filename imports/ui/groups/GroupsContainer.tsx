@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { User } from "../../types/user";
 import { GroupsList } from "./GroupsList";
 import { GroupMembers } from "./GroupMembers";
-import { GroupTasks } from "./GroupTasks";
+import { GroupTasks, GroupTasksRefHandle } from "./GroupTasks";
 import { GroupChat } from "./GroupChat";
 import { CreateGroupModal } from "./CreateGroupModal";
+import { AddTaskModal } from "../AddTaskModal";
 import { MessagesCollection } from "../../api/MessagesCollection";
 import { TasksCollection } from "../../api/TasksCollection";
 
@@ -27,12 +28,27 @@ export const GroupsContainer: React.FC<GroupsContainerProps> = ({ user }) => {
     const [activeTab, setActiveTab] = useState<GroupTab>("tasks");
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showHiddenTasks, setShowHiddenTasks] = useState<boolean>(true);
+    const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+    const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 767);
+    const groupTasksRef = useRef<GroupTasksRefHandle>(null);
+    const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
 
     useTracker(() => {
         Meteor.subscribe("messages");
         Meteor.subscribe("tasks");
         Meteor.subscribe("groups");
         return {};
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobileView(window.innerWidth <= 767);
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
     }, []);
 
     const { notifications, hasActivity } = useTracker(() => {
@@ -104,6 +120,7 @@ export const GroupsContainer: React.FC<GroupsContainerProps> = ({ user }) => {
 
     const handleTasksVisibility = (showAll: boolean) => {
         setShowHiddenTasks(showAll);
+        setHideCompletedTasks(!showAll);
     };
 
     const handleGroupSelect = (groupId: string, groupName: string) => {
@@ -111,12 +128,23 @@ export const GroupsContainer: React.FC<GroupsContainerProps> = ({ user }) => {
         setSelectedGroupName(groupName);
     };
 
+    const handleBackToGroups = () => {
+        setSelectedGroupId(null);
+        setSelectedGroupName("");
+    };
+
     const handleCreateGroup = () => {
         setShowCreateModal(true);
     };
 
+    const toggleHideCompleted = () => {
+        if (groupTasksRef.current && groupTasksRef.current.toggleHideCompleted) {
+            groupTasksRef.current.toggleHideCompleted();
+        }
+    };
+
     return (
-        <div className="groups-container">
+        <div className={`groups-container ${isMobileView && selectedGroupId ? "mobile-group-active" : ""}`}>
             <div className="groups-sidebar">
                 <GroupsList currentUserId={user._id} selectedGroupId={selectedGroupId} onSelectGroup={handleGroupSelect} onCreateGroup={handleCreateGroup} />
             </div>
@@ -125,8 +153,17 @@ export const GroupsContainer: React.FC<GroupsContainerProps> = ({ user }) => {
                 {selectedGroupId ? (
                     <>
                         <div className="group-header">
-                            <h2>{selectedGroupName}</h2>
-
+                            <div className="group-header-content">
+                                <h2>{selectedGroupName}</h2>
+                                {isMobileView && (
+                                    <button type="button" className="back-to-groups-btn" onClick={handleBackToGroups} title="Retour à la liste des groupes">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        Groupes
+                                    </button>
+                                )}
+                            </div>
                             <div className="group-tabs">
                                 <button type="button" className={`group-tab-btn ${activeTab === "tasks" ? "active" : ""}`} onClick={() => setActiveTab("tasks")}>
                                     Tâches
@@ -140,18 +177,23 @@ export const GroupsContainer: React.FC<GroupsContainerProps> = ({ user }) => {
                                     {notifications.chat > 0 && activeTab !== "chat" && <span className="notification-badge">{notifications.chat}</span>}
                                 </button>
                             </div>
-
-                            {/* Indicateur global d'activité - visible en haut */}
-                            {hasActivity && (
-                                <div className="activity-indicator">
-                                    <span className="activity-dot" />
-                                    Activité récente
-                                </div>
-                            )}
                         </div>
 
                         <div className="group-tab-content">
-                            {activeTab === "tasks" && <GroupTasks groupId={selectedGroupId} currentUserId={user._id} onVisibilityChange={handleTasksVisibility} />}
+                            {activeTab === "tasks" && (
+                                <>
+                                    <GroupTasks ref={groupTasksRef} groupId={selectedGroupId} currentUserId={user._id} onVisibilityChange={handleTasksVisibility} disableMobileControls={true} />
+
+                                    {showAddTaskModal && <AddTaskModal isOpen={true} onClose={() => setShowAddTaskModal(false)} groupId={selectedGroupId} />}
+
+                                    <button className="mobile-add-task-button" onClick={() => setShowAddTaskModal(true)}>
+                                        +
+                                    </button>
+                                    <button className="mobile-visibility-toggle" onClick={toggleHideCompleted} title={!hideCompletedTasks ? "Afficher toutes les tâches" : "Masquer les tâches terminées"}>
+                                        <img src={!hideCompletedTasks ? "/icons/eye/open.png" : "/icons/eye/closed.png"} alt={!hideCompletedTasks ? "Afficher toutes les tâches" : "Masquer les tâches terminées"} />
+                                    </button>
+                                </>
+                            )}
 
                             {activeTab === "members" && <GroupMembers groupId={selectedGroupId} currentUserId={user._id} />}
 
@@ -168,7 +210,6 @@ export const GroupsContainer: React.FC<GroupsContainerProps> = ({ user }) => {
                 )}
             </div>
 
-            {/* Modal de création de groupe */}
             {showCreateModal && <CreateGroupModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />}
         </div>
     );
