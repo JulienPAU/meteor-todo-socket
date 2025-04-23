@@ -9,7 +9,7 @@ import {
   GroupRemoveMember,
   GroupChangeMemberRole
 } from "../types/group";
-import { randomColor } from "../utils/validators";
+import { randomColor, checkGroupAdminPermission } from "../utils/validators";
 
 Meteor.methods({
   "groups.create": async function (groupData: GroupCreate) {
@@ -71,30 +71,12 @@ Meteor.methods({
   },
 
   "groups.delete": async function (groupId: string) {
-    if (!this.userId) {
-      throw new Meteor.Error(
-        "not-authorized",
-        "Vous devez être connecté pour supprimer un groupe"
-      );
-    }
-
     check(groupId, String);
 
-    const group = await GroupsCollection.findOneAsync(groupId);
-    if (!group) {
-      throw new Meteor.Error("group-not-found", "Groupe non trouvé");
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "Vous devez être connecté pour effectuer cette action");
     }
-
-    const isAdmin = group.members.some(
-      (member) => member.userId === this.userId && member.role === "admin"
-    );
-
-    if (!isAdmin) {
-      throw new Meteor.Error(
-        "not-authorized",
-        "Seul un administrateur peut supprimer le groupe"
-      );
-    }
+    const group = await checkGroupAdminPermission(groupId, this.userId, GroupsCollection);
 
     await TasksCollection.removeAsync({ groupId });
 
@@ -102,13 +84,6 @@ Meteor.methods({
   },
 
   "groups.addMember": async function (data: GroupAddMember) {
-    if (!this.userId) {
-      throw new Meteor.Error(
-        "not-authorized",
-        "Vous devez être connecté pour ajouter un membre"
-      );
-    }
-
     check(data, {
       groupId: String,
       userId: String,
@@ -120,24 +95,14 @@ Meteor.methods({
       throw new Meteor.Error("invalid-role", "Rôle invalide");
     }
 
-    const group = await GroupsCollection.findOneAsync(data.groupId);
-    if (!group) {
-      throw new Meteor.Error("group-not-found", "Groupe non trouvé");
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "Vous devez être connecté pour effectuer cette action");
     }
 
-    const isAdmin = group.members.some(
-      (member) => member.userId === this.userId && member.role === "admin"
-    );
-
-    if (!isAdmin) {
-      throw new Meteor.Error(
-        "not-authorized",
-        "Seul un administrateur peut ajouter un membre"
-      );
-    }
+    const group = await checkGroupAdminPermission(data.groupId, this.userId as string, GroupsCollection);
 
     const isMember = group.members.some(
-      (member) => member.userId === data.userId
+      (member: { userId: string }) => member.userId === data.userId
     );
     if (isMember) {
       throw new Meteor.Error(
@@ -199,7 +164,7 @@ Meteor.methods({
     }
 
     const memberToRemove = group.members.find(
-      (member) => member.userId === data.userId
+      (member: { userId: string; role: string }) => member.userId === data.userId
     );
     if (!memberToRemove) {
       throw new Meteor.Error(
@@ -210,7 +175,7 @@ Meteor.methods({
 
     if (memberToRemove.role === "admin") {
       const adminCount = group.members.filter(
-        (member) => member.role === "admin"
+        (member: { userId: string; role: string }) => member.role === "admin"
       ).length;
       if (adminCount === 1) {
         throw new Meteor.Error(
@@ -231,13 +196,6 @@ Meteor.methods({
   },
 
   "groups.changeMemberRole": async function (data: GroupChangeMemberRole) {
-    if (!this.userId) {
-      throw new Meteor.Error(
-        "not-authorized",
-        "Vous devez être connecté pour modifier le rôle d'un membre"
-      );
-    }
-
     check(data, {
       groupId: String,
       userId: String,
@@ -247,22 +205,10 @@ Meteor.methods({
     if (!["admin", "member"].includes(data.role)) {
       throw new Meteor.Error("invalid-role", "Rôle invalide");
     }
-
-    const group = await GroupsCollection.findOneAsync(data.groupId);
-    if (!group) {
-      throw new Meteor.Error("group-not-found", "Groupe non trouvé");
+    if (!this.userId) {
+      throw new Meteor.Error("not-authorized", "Vous devez être connecté pour effectuer cette action");
     }
-
-    const isAdmin = group.members.some(
-      (member) => member.userId === this.userId && member.role === "admin"
-    );
-
-    if (!isAdmin) {
-      throw new Meteor.Error(
-        "not-authorized",
-        "Seul un administrateur peut modifier le rôle d'un membre"
-      );
-    }
+    const group = await checkGroupAdminPermission(data.groupId, this.userId, GroupsCollection);
 
     if (data.userId === this.userId) {
       throw new Meteor.Error(
@@ -272,7 +218,7 @@ Meteor.methods({
     }
 
     const memberToUpdate = group.members.find(
-      (member) => member.userId === data.userId
+      (member: { userId: string; role: string }) => member.userId === data.userId
     );
     if (!memberToUpdate) {
       throw new Meteor.Error(
@@ -283,7 +229,7 @@ Meteor.methods({
 
     if (memberToUpdate.role === "admin" && data.role === "member") {
       const adminCount = group.members.filter(
-        (member) => member.role === "admin"
+        (member: { userId: string; role: string }) => member.role === "admin"
       ).length;
       if (adminCount === 1) {
         throw new Meteor.Error(

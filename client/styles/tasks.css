@@ -101,7 +101,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease-in-out;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     cursor: pointer;
 }
 
@@ -115,6 +115,87 @@
     border-left: 4px solid var(--primary-color);
 }
 
+.tasks > li.urgent {
+    background-color: rgba(255, 235, 235, 1);
+    border-left: 4px solid #ff5252;
+}
+
+.tasks > li.urgent.checked {
+    background-color: var(--task-completed-bg);
+    border-left: 4px solid var(--primary-color);
+}
+
+.urgent-indicator {
+    margin-right: 8px;
+    color: #ff3333;
+    font-size: 1.1em;
+    animation: pulse 2s infinite;
+    display: inline-flex;
+    vertical-align: middle;
+    align-items: center;
+}
+
+.urgent-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 2px solid #ddd;
+    transition: all 0.2s ease;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.urgent-btn:hover {
+    transform: scale(1.05);
+    border-color: #ffaa33;
+}
+
+.urgent-btn.active {
+    border: 2px solid #ff3333;
+    box-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
+}
+
+.urgent-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.urgent-btn:hover .urgent-icon {
+    transform: scale(1.1);
+}
+
+.urgent-btn.active .urgent-icon {
+    animation: rotate 1s infinite alternate;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(-10deg);
+    }
+    100% {
+        transform: rotate(10deg);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 .tasks-edit-hint {
     text-align: center;
     margin: 10px 0 20px;
@@ -126,19 +207,22 @@
 .task-controls {
     display: flex;
     align-items: center;
-    margin-left: 10px;
     flex-shrink: 0;
-    gap: 8px;
+    gap: 10px;
+    margin-left: auto;
 }
 
 .tasks > li > span {
-    flex-grow: 1;
+    flex: 1;
     padding: 0 8px;
     font-size: 1.1em;
     color: var(--text-color);
     word-break: break-word;
     line-height: 1.4;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    min-width: 0;
 }
 
 .text-completed {
@@ -178,25 +262,33 @@
 }
 
 .task-checkbox {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
+    margin: 0;
     cursor: pointer;
     accent-color: var(--primary-color);
-    flex-shrink: 0;
-}
-
-.tasks > li button.delete-btn {
-    background-color: var(--error-color);
-    border-radius: 50%;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.tasks > li button.delete-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    padding: 0;
+    background-color: var(--error-color);
     font-size: 1.2em;
     line-height: 1;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tasks > li button.delete-btn:hover {
@@ -259,12 +351,89 @@
     cursor: pointer;
     width: 100%;
     padding: 2px 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.task-creator {
+    width: 100%;
+    margin-top: 5px;
 }
 
 .task-edit-area:hover {
     text-decoration: underline;
     text-decoration-style: dotted;
     text-decoration-color: var(--text-color-light);
+}
+
+/* Styles pour le drag and drop */
+.drag-handle {
+    cursor: grab;
+    padding: 5px;
+    border-radius: 4px;
+    color: var(--text-color-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    touch-action: none;
+    flex: 0 0 40px;
+    margin-right: 0;
+}
+
+.drag-handle:hover {
+    color: var(--primary-color);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle svg {
+    width: 28px;
+    height: 28px;
+}
+
+.sortable-ghost {
+    opacity: 0.5;
+    background-color: var(--primary-color-light) !important;
+}
+
+.sortable-chosen {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(2deg);
+}
+
+/* Ajustement de la mise en page de li pour inclure la poignée */
+.tasks > li {
+    position: relative;
+    display: flex;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+    background-color: var(--task-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    cursor: pointer;
+}
+
+.task-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.task-text {
+    flex: 1;
 }
 
 @media (max-width: 600px) {
@@ -283,13 +452,29 @@
     }
 
     .tasks > li {
-        padding: 12px;
+        padding: 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
     }
 
     .tasks > li > span {
-        max-width: 75%;
-        font-size: 0.95em;
-        padding: 4px 0;
+        flex: 1 0 calc(100% - 40px);
+        justify-content: center;
+        text-align: center;
+        padding: 2px 0;
+        margin-bottom: 5px;
+    }
+
+    .task-edit-area {
+        justify-content: center;
+    }
+
+    .task-controls {
+        flex: 0 0 100%;
+        justify-content: center;
+        margin: 8px 0 0 0;
+        gap: 15px;
     }
 
     .filter {
@@ -303,19 +488,19 @@
     .task-controls {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
     }
 
     .task-checkbox {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         min-width: 18px;
     }
 
     .tasks > li button.delete-btn {
-        width: 22px;
-        height: 22px;
-        min-width: 22px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
         font-size: 0.9em;
     }
 
@@ -331,5 +516,59 @@
     .edit-buttons {
         align-self: flex-end;
         margin-top: 5px;
+    }
+
+    .drag-handle {
+        flex: 0 0 26px;
+        padding: 4px;
+        margin-right: 6px;
+        align-self: center;
+    }
+
+    .drag-handle svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .urgent-btn {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+    }
+
+    .urgent-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .urgent-indicator {
+        order: -1;
+        margin: 0 0 5px 0;
+        font-size: 1.1em;
+    }
+
+    .task-creator {
+        text-align: center;
+    }
+
+    .urgent-indicator {
+        font-size: 0.9em;
+        margin-right: 5px;
+    }
+
+    .task-content {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .urgent-indicator {
+        margin: 0 0 5px 0;
+        font-size: 1.1em;
+    }
+
+    .task-text {
+        text-align: center;
+        width: 100%;
     }
 }

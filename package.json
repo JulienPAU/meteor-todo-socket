@@ -9,9 +9,13 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.20.7",
+    "@types/mongodb": "^4.0.6",
+    "@types/sortablejs": "^1.15.8",
     "meteor-node-stubs": "^1.2.5",
+    "mongodb": "^6.16.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sortablejs": "^1.15.6"
   },
   "devDependencies": {
     "@types/mocha": "^8.2.3",

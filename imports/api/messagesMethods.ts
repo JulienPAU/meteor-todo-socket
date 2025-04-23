@@ -1,13 +1,10 @@
 import { Meteor } from "meteor/meteor";
-import { check, Match } from "meteor/check";
+import { check } from "meteor/check";
 import { MessagesCollection } from "./MessagesCollection";
 import { MessageInsert, GroupMessageInsert } from "../types/message";
-import { encryptMessage, validateChatMessage } from "../utils/validators";
-import { MongoInternals } from "meteor/mongo";
+import { encryptMessage, validateChatMessage, checkGroupMembership, checkMessagePermission } from "../utils/validators";
 import { GroupsCollection } from "./GroupsCollection";
 import { TasksCollection } from "./TasksCollection";
-
-const ObjectId = MongoInternals.NpmModules.mongodb.module.ObjectId;
 
 Meteor.methods({
   async "messages.send"({
@@ -34,17 +31,7 @@ Meteor.methods({
     const encryptedContent = encryptMessage(content);
 
     if (groupId) {
-      const group = await GroupsCollection.findOneAsync({
-        _id: groupId,
-        "members.userId": this.userId
-      });
-
-      if (!group) {
-        throw new Meteor.Error(
-          "non-autorise",
-          "Vous n'êtes pas membre de ce groupe"
-        );
-      }
+      await checkGroupMembership(groupId, this.userId, GroupsCollection);
 
       return MessagesCollection.insertAsync({
         senderId: this.userId,
@@ -114,20 +101,9 @@ Meteor.methods({
 
     check(groupId, String);
 
-    const group = await GroupsCollection.findOneAsync({
-      _id: groupId,
-      "members.userId": this.userId
-    });
-
-    if (!group) {
-      throw new Meteor.Error(
-        "non-autorise",
-        "Vous n'êtes pas membre de ce groupe"
-      );
-    }
+    await checkGroupMembership(groupId, this.userId, GroupsCollection);
 
     try {
-
       await MessagesCollection.updateAsync(
         { groupId: groupId },
         {
@@ -165,57 +141,9 @@ Meteor.methods({
       );
     }
 
-    let idToUse = messageId;
+    await checkMessagePermission(messageId, this.userId, MessagesCollection, GroupsCollection);
 
-    try {
-      const message = await MessagesCollection.findOneAsync({ _id: idToUse });
-
-      if (!message) {
-        throw new Meteor.Error("message-non-trouve", "Message non trouvé");
-      }
-
-      if (message.groupId) {
-        const group = await GroupsCollection.findOneAsync({
-          _id: message.groupId,
-          "members.userId": this.userId
-        });
-
-        if (!group) {
-          throw new Meteor.Error(
-            "non-autorise",
-            "Vous n'êtes pas membre de ce groupe"
-          );
-        }
-
-        const isAdmin = group.members.some(
-          (member) => member.userId === this.userId && member.role === "admin"
-        );
-
-        if (message.senderId !== this.userId && !isAdmin) {
-          throw new Meteor.Error(
-            "non-autorise",
-            "Vous ne pouvez supprimer que vos propres messages ou être administrateur du groupe"
-          );
-        }
-      }
-      else if (
-        message.senderId !== this.userId &&
-        message.receiverId !== this.userId
-      ) {
-        throw new Meteor.Error(
-          "non-autorise",
-          "Vous ne pouvez supprimer que vos propres messages ou les messages que vous avez reçus"
-        );
-      }
-
-      return MessagesCollection.removeAsync({ _id: idToUse });
-    } catch (error) {
-      console.error("Erreur lors de la suppression du message:", error);
-      throw new Meteor.Error(
-        "erreur-suppression",
-        "Erreur lors de la suppression du message"
-      );
-    }
+    return MessagesCollection.removeAsync({ _id: messageId });
   },
 
   async "messages.sendToGroup"({ groupId, content }: GroupMessageInsert) {
@@ -234,17 +162,7 @@ Meteor.methods({
       throw new Meteor.Error("contenu-invalide", contentValidation.error);
     }
 
-    const group = await GroupsCollection.findOneAsync({
-      _id: groupId,
-      "members.userId": this.userId
-    });
-
-    if (!group) {
-      throw new Meteor.Error(
-        "non-autorise",
-        "Vous n'êtes pas membre de ce groupe"
-      );
-    }
+    await checkGroupMembership(groupId, this.userId, GroupsCollection);
 
     const sender = await Meteor.users.findOneAsync(this.userId);
     const senderUsername = sender?.username || "Utilisateur inconnu";

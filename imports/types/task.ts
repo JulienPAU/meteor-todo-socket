@@ -5,12 +5,15 @@ export interface Task {
     groupId?: string;
     createdAt: Date;
     isChecked?: boolean;
-    createdBy?: string; 
+    createdBy?: string;
+    position?: number;
+    isUrgent?: boolean;
 }
 
 export interface TaskInsert {
     text: string;
     groupId?: string;
+    isUrgent?: boolean;
 }
 
 export interface TaskToggle {

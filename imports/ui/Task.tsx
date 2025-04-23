@@ -18,9 +18,14 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(task.text);
+    const [localChecked, setLocalChecked] = useState(task.isChecked);
     const inputRef = useRef<HTMLInputElement>(null);
     const editTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = Meteor.user();
+
+    useEffect(() => {
+        setLocalChecked(task.isChecked);
+    }, [task.isChecked]);
 
     useEffect(() => {
         return () => {
@@ -85,6 +90,12 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
         setShowConfirmation(true);
     };
 
+    const handleToggleUrgent = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        Meteor.callAsync("tasks.toggleUrgent", task._id);
+    };
+
     const handleConfirmDelete = () => {
         onDeleteClick(task);
         setShowConfirmation(false);
@@ -115,7 +126,12 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
         }
     };
 
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCheckboxClick = (e: React.MouseEvent<HTMLInputElement>) => {
+        e.preventDefault();
+
+        const checkbox = e.target as HTMLInputElement;
+        checkbox.checked = !checkbox.checked;
+
         onCheckboxClick({
             ...task,
             isChecked: !task.isChecked,
@@ -268,12 +284,32 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
 
     return (
         <>
-            <li className={task.isChecked ? "checked" : ""}>
+            <li className={`${task.isChecked ? "checked" : ""} ${task.isUrgent ? "urgent" : ""}`} data-id={task._id}>
                 {!isEditing ? (
                     <>
+                        <div className="drag-handle">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <circle cx="5" cy="4" r="2.5" fill="currentColor" />
+                                <circle cx="12" cy="4" r="2.5" fill="currentColor" />
+                                <circle cx="19" cy="4" r="2.5" fill="currentColor" />
+                                <circle cx="5" cy="12" r="2.5" fill="currentColor" />
+                                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                                <circle cx="19" cy="12" r="2.5" fill="currentColor" />
+                                <circle cx="5" cy="20" r="2.5" fill="currentColor" />
+                                <circle cx="12" cy="20" r="2.5" fill="currentColor" />
+                                <circle cx="19" cy="20" r="2.5" fill="currentColor" />
+                            </svg>
+                        </div>
                         <span className={task.isChecked ? "text-completed" : ""}>
                             <div className="task-edit-area" onClick={handleTaskTextClick} onKeyDown={handleKeyPress} role="button" tabIndex={0}>
-                                {task.text}
+                                <div className="task-content">
+                                    {task.isUrgent && (
+                                        <span className="urgent-indicator" title="Tâche urgente">
+                                            ⚠️
+                                        </span>
+                                    )}
+                                    <span className="task-text">{task.text}</span>
+                                </div>
                                 {showCreator && task.createdBy && (
                                     <div className="task-creator">
                                         <small>Créée par: {task.createdBy}</small>
@@ -282,7 +318,10 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
                             </div>
                         </span>
                         <div className="task-controls">
-                            <input type="checkbox" checked={!!task.isChecked} onChange={handleCheckboxChange} className="task-checkbox" />
+                            <button onClick={handleToggleUrgent} className={`urgent-btn ${task.isUrgent ? "active" : ""}`} type="button" title={task.isUrgent ? "Retirer l'urgence" : "Marquer comme urgent"}>
+                                <img src="/icons/siren.png" alt="Urgence" className="urgent-icon" />
+                            </button>
+                            <input type="checkbox" checked={!!task.isChecked} onClick={handleCheckboxClick} onChange={() => {}} className="task-checkbox" />
                             <button onClick={handleDeleteClick} className="delete-btn" type="button">
                                 &times;
                             </button>

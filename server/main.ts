@@ -4,6 +4,7 @@ import { UsersCredentialsCollection } from "/imports/api/UsersCollection";
 import { MessagesCollection } from "/imports/api/MessagesCollection";
 import { UserActivityCollection } from "/imports/api/UserActivityCollection";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
+import { hashPassword } from "/imports/utils/validators";
 import "../imports/api/TasksPublication";
 import "../imports/api/tasksMethods";
 import "../imports/api/authMethods";
@@ -14,12 +15,9 @@ import "../imports/api/userActivityMethods";
 import "../imports/api/UserActivityPublication";
 import "../imports/api/groupsMethods";
 import "../imports/api/GroupsPublication";
+import { Mongo } from "meteor/mongo";
 
-const hashPassword = (password: string): string => {
-  return Array.from(password)
-    .reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0)
-    .toString();
-};
+import { Document } from "mongodb";
 
 const isRailwayEnvironment = (): boolean => {
   return (
@@ -29,32 +27,36 @@ const isRailwayEnvironment = (): boolean => {
   );
 };
 
+const resetCollection = async <T extends Document>(
+  collection: Mongo.Collection<T>,
+  name: string
+): Promise<number> => {
+  const count = await collection.find().countAsync();
+  if (count > 0) {
+    await collection.removeAsync({});
+    console.log(`✅ ${count} ${name} supprimés`);
+  }
+  return count;
+};
+
+const initializeCollectionIfEmpty = async <T extends Document>(
+  collection: Mongo.Collection<T>,
+  name: string,
+  initialData: Partial<T>
+): Promise<void> => {
+  if (await collection.find().countAsync() === 0) {
+    await collection.insertAsync(initialData as any);
+    console.log(`Collection ${name} initialisée`);
+  }
+};
+
 const resetDatabase = async (): Promise<void> => {
   console.log("🔄 Réinitialisation de la base de données en cours...");
 
-  const activityCount = await UserActivityCollection.find().countAsync();
-  if (activityCount > 0) {
-    await UserActivityCollection.removeAsync({});
-    console.log(`✅ ${activityCount} activités utilisateur supprimées`);
-  }
-
-  const messagesCount = await MessagesCollection.find().countAsync();
-  if (messagesCount > 0) {
-    await MessagesCollection.removeAsync({});
-    console.log(`✅ ${messagesCount} messages supprimés`);
-  }
-
-  const groupsCount = await GroupsCollection.find().countAsync();
-  if (groupsCount > 0) {
-    await GroupsCollection.removeAsync({});
-    console.log(`✅ ${groupsCount} groupes supprimés`);
-  }
-
-  const tasksCount = await TasksCollection.find().countAsync();
-  if (tasksCount > 0) {
-    await TasksCollection.removeAsync({});
-    console.log(`✅ ${tasksCount} tâches supprimées`);
-  }
+  await resetCollection(UserActivityCollection, "activités utilisateur");
+  await resetCollection(MessagesCollection, "messages");
+  await resetCollection(GroupsCollection, "groupes");
+  await resetCollection(TasksCollection, "tâches");
 
   const usersCount = await Meteor.users.find().countAsync();
   if (usersCount > 0) {
@@ -62,11 +64,7 @@ const resetDatabase = async (): Promise<void> => {
     console.log(`✅ ${usersCount} utilisateurs supprimés`);
   }
 
-  const credentialsCount = await UsersCredentialsCollection.find().countAsync();
-  if (credentialsCount > 0) {
-    await UsersCredentialsCollection.removeAsync({});
-    console.log(`✅ ${credentialsCount} identifications supprimées`);
-  }
+  await resetCollection(UsersCredentialsCollection, "identifications");
 
   console.log("🎉 Réinitialisation de la base de données terminée!");
 };
@@ -76,18 +74,21 @@ Meteor.startup(async () => {
     await resetDatabase();
   }
 
-  if (await UserActivityCollection.find().countAsync() === 0) {
-    await UserActivityCollection.insertAsync({
+  await initializeCollectionIfEmpty(
+    UserActivityCollection,
+    "user_activity",
+    {
       sessionId: "initialization-session",
       username: "system",
       action: "cursor",
       timestamp: new Date()
-    });
-    console.log("Collection user_activity initialisée");
-  }
+    }
+  );
 
-  if (await GroupsCollection.find().countAsync() === 0) {
-    await GroupsCollection.insertAsync({
+  await initializeCollectionIfEmpty(
+    GroupsCollection,
+    "groups",
+    {
       name: "Initialisation",
       description: "Document d'initialisation de la collection",
       createdAt: new Date(),
@@ -96,20 +97,20 @@ Meteor.startup(async () => {
         userId: "system",
         username: "system"
       }
-    });
-    console.log("Collection groups initialisée");
-  }
+    }
+  );
 
-  if (await MessagesCollection.find().countAsync() === 0) {
-    await MessagesCollection.insertAsync({
+  await initializeCollectionIfEmpty(
+    MessagesCollection,
+    "messages",
+    {
       senderId: "system",
       senderUsername: "system",
       content: "Initialisation de la collection",
       createdAt: new Date(),
       read: false
-    });
-    console.log("Collection messages initialisée");
-  }
+    }
+  );
 });
 
 Meteor.startup(() => {

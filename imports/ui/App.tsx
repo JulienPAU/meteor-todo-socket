@@ -16,6 +16,7 @@ import { Task } from "/imports/types/task";
 import { GroupsCollection } from "/imports/api/GroupsCollection";
 import { initTabNotifications, updateTabTitle } from "/imports/utils/tabNotifications";
 import { registerServiceWorker, updateAppBadge, checkNotificationPermission, showNotification } from "/imports/utils/pwaManager";
+import Sortable from "sortablejs";
 
 type AppMode = "tasks" | "chat" | "groups";
 
@@ -26,8 +27,9 @@ export const App = () => {
     const [showPermissionRequest, setShowPermissionRequest] = useState(false);
 
     const prevNotificationsRef = useRef({ messages: 0, groups: false });
-
     const isInitialLoadRef = useRef(true);
+    const tasksListRef = useRef<HTMLUListElement>(null);
+    const sortableRef = useRef<Sortable | null>(null);
 
     const isTasksLoading = useSubscribe("tasks");
     const isMessagesLoading = useSubscribe("messages");
@@ -221,9 +223,43 @@ export const App = () => {
         }
 
         return TasksCollection.find(hideCompleted ? { ...hideCompletedFilter, groupId: { $exists: false } } : { groupId: { $exists: false } }, {
-            sort: { createdAt: -1 },
+            sort: { isUrgent: -1, position: 1, createdAt: -1 },
         }).fetch();
     });
+
+    useEffect(() => {
+        if (tasksListRef.current && appMode === "tasks" && tasks.length > 0) {
+            if (sortableRef.current) {
+                sortableRef.current.destroy();
+            }
+
+            sortableRef.current = new Sortable(tasksListRef.current, {
+                animation: 150,
+                handle: ".drag-handle",
+                ghostClass: "sortable-ghost",
+                chosenClass: "sortable-chosen",
+                dragClass: "sortable-drag",
+                onEnd: (evt) => {
+                    const newTaskIds = Array.from(evt.to.children)
+                        .map((item) => item.getAttribute("data-id"))
+                        .filter((id): id is string => id !== null);
+
+                    if (newTaskIds.length > 0) {
+                        Meteor.callAsync("tasks.updatePosition", newTaskIds, undefined).catch((error) => {
+                            console.error("Erreur lors de la mise à jour des positions:", error);
+                        });
+                    }
+                },
+            });
+        }
+
+        return () => {
+            if (sortableRef.current) {
+                sortableRef.current.destroy();
+                sortableRef.current = null;
+            }
+        };
+    }, [tasks, appMode]);
 
     if (!user) {
         return (
@@ -299,7 +335,7 @@ export const App = () => {
                             <button onClick={() => setHideCompleted(!hideCompleted)}>{hideCompleted ? "Afficher tout" : "Masquer les tâches terminées"}</button>
                         </div>
 
-                        <ul className="tasks">
+                        <ul className="tasks" ref={tasksListRef}>
                             {tasks.map((task: Task) => (
                                 <TaskComponent key={task._id} task={task} onCheckboxClick={handleToggleChecked} onDeleteClick={handleDelete} />
                             ))}
@@ -307,6 +343,8 @@ export const App = () => {
 
                         <div className="tasks-edit-hint">
                             <em>Astuce : Cliquez sur le texte d'une tâche pour la modifier</em>
+                            <br />
+                            <em>Astuce : Utilisez le bouton de glisser-déposer pour réordonner vos tâches</em>
                         </div>
 
                         {tasks.length === 0 && (
