@@ -5,7 +5,8 @@ export interface Task {
     groupId?: string;
     createdAt: Date;
     isChecked?: boolean;
-    createdBy?: string; 
+    createdBy?: string;
+    position?: number;
 }
 
 export interface TaskInsert {

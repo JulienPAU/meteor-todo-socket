@@ -151,6 +151,71 @@ Meteor.methods({
             { _id: taskData._id },
             { $set: { text: taskData.text } }
         );
+    },
+
+    "tasks.updatePosition": async function (taskIds, groupId) {
+        check(taskIds, [String]);
+        check(groupId, Match.Maybe(String));
+
+        if (!this.userId) {
+            throw new Meteor.Error("not-authorized", "Vous devez être connecté pour réordonner les tâches");
+        }
+
+        // Pour les tâches personnelles
+        if (!groupId) {
+            // Vérifier que toutes les tâches appartiennent à l'utilisateur et ne sont pas des tâches de groupe
+            const tasksCount = await TasksCollection.find({
+                _id: { $in: taskIds },
+                userId: this.userId,
+                groupId: { $exists: false }
+            }).countAsync();
+
+            if (tasksCount !== taskIds.length) {
+                throw new Meteor.Error("not-authorized", "Certaines tâches n'appartiennent pas à cet utilisateur");
+            }
+
+            // Mettre à jour les positions
+            for (let index = 0; index < taskIds.length; index++) {
+                await TasksCollection.updateAsync(
+                    { _id: taskIds[index] },
+                    { $set: { position: index } }
+                );
+            }
+
+            return true;
+        }
+        // Pour les tâches de groupe
+        else {
+            // Vérifier que l'utilisateur est membre du groupe
+            const isMember = await GroupsCollection.find({
+                _id: groupId,
+                "members.userId": this.userId
+            }).countAsync() > 0;
+
+            if (!isMember) {
+                throw new Meteor.Error("not-authorized", "Vous n'êtes pas membre de ce groupe");
+            }
+
+            // Vérifier que toutes les tâches appartiennent au groupe
+            const groupTasksCount = await TasksCollection.find({
+                _id: { $in: taskIds },
+                groupId: groupId
+            }).countAsync();
+
+            if (groupTasksCount !== taskIds.length) {
+                throw new Meteor.Error("not-authorized", "Certaines tâches n'appartiennent pas à ce groupe");
+            }
+
+            // Mettre à jour les positions
+            for (let index = 0; index < taskIds.length; index++) {
+                await TasksCollection.updateAsync(
+                    { _id: taskIds[index] },
+                    { $set: { position: index } }
+                );
+            }
+
+            return true;
+        }
     }
 });
 

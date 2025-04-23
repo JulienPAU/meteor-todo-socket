@@ -268,9 +268,22 @@ export const Task = ({ task, onCheckboxClick, onDeleteClick, showCreator, groupI
 
     return (
         <>
-            <li className={task.isChecked ? "checked" : ""}>
+            <li className={task.isChecked ? "checked" : ""} data-id={task._id}>
                 {!isEditing ? (
                     <>
+                        <div className="drag-handle">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <circle cx="5" cy="4" r="2.5" fill="currentColor" />
+                                <circle cx="12" cy="4" r="2.5" fill="currentColor" />
+                                <circle cx="19" cy="4" r="2.5" fill="currentColor" />
+                                <circle cx="5" cy="12" r="2.5" fill="currentColor" />
+                                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                                <circle cx="19" cy="12" r="2.5" fill="currentColor" />
+                                <circle cx="5" cy="20" r="2.5" fill="currentColor" />
+                                <circle cx="12" cy="20" r="2.5" fill="currentColor" />
+                                <circle cx="19" cy="20" r="2.5" fill="currentColor" />
+                            </svg>
+                        </div>
                         <span className={task.isChecked ? "text-completed" : ""}>
                             <div className="task-edit-area" onClick={handleTaskTextClick} onKeyDown={handleKeyPress} role="button" tabIndex={0}>
                                 {task.text}

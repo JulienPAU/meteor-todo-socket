@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
+import Sortable from "sortablejs";
 
 import { TasksCollection } from "../../api/TasksCollection";
 import type { Task as TaskType } from "../../types/task";
@@ -15,6 +16,8 @@ interface GroupTasksProps {
 
 export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: GroupTasksProps) => {
     const [hideCompleted, setHideCompleted] = useState(false);
+    const groupTasksListRef = useRef<HTMLUListElement>(null);
+    const sortableRef = useRef<Sortable | null>(null);
 
     const { tasks, pendingTasksCount, isLoading } = useTracker(() => {
         const noDataAvailable = {
@@ -40,7 +43,7 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
                       isChecked: { $ne: true },
                   }
                 : { groupId: groupId },
-            { sort: { createdAt: -1 } }
+            { sort: { position: 1, createdAt: -1 } }
         ).fetch();
 
         const pendingTasksCount = TasksCollection.find({
@@ -50,6 +53,41 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
 
         return { tasks, pendingTasksCount, isLoading: false };
     }, [groupId, hideCompleted, currentUserId]);
+
+    // Initialiser Sortable.js pour les tâches de groupe
+    useEffect(() => {
+        if (groupTasksListRef.current && tasks.length > 0) {
+            if (sortableRef.current) {
+                sortableRef.current.destroy();
+            }
+
+            sortableRef.current = new Sortable(groupTasksListRef.current, {
+                animation: 150,
+                handle: ".drag-handle",
+                ghostClass: "sortable-ghost",
+                chosenClass: "sortable-chosen",
+                dragClass: "sortable-drag",
+                onEnd: (evt) => {
+                    const newTaskIds = Array.from(evt.to.children)
+                        .map((item) => item.getAttribute("data-id"))
+                        .filter((id): id is string => id !== null);
+
+                    if (newTaskIds.length > 0) {
+                        Meteor.callAsync("tasks.updatePosition", newTaskIds, groupId).catch((error) => {
+                            console.error("Erreur lors de la mise à jour des positions de tâches de groupe:", error);
+                        });
+                    }
+                },
+            });
+        }
+
+        return () => {
+            if (sortableRef.current) {
+                sortableRef.current.destroy();
+                sortableRef.current = null;
+            }
+        };
+    }, [tasks, groupId]);
 
     useEffect(() => {
         if (onVisibilityChange) {
@@ -89,11 +127,16 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
             </div>
 
             {tasks.length > 0 ? (
-                <ul className="tasks">
-                    {tasks.map((task: TaskType) => (
-                        <Task key={task._id} task={task} onCheckboxClick={toggleChecked} onDeleteClick={deleteTask} showCreator={true} groupId={groupId} />
-                    ))}
-                </ul>
+                <>
+                    <ul className="tasks" ref={groupTasksListRef}>
+                        {tasks.map((task: TaskType) => (
+                            <Task key={task._id} task={task} onCheckboxClick={toggleChecked} onDeleteClick={deleteTask} showCreator={true} groupId={groupId} />
+                        ))}
+                    </ul>
+                    <div className="tasks-edit-hint">
+                        <em>Astuce : Utilisez le bouton de glisser-déposer pour réordonner les tâches du groupe</em>
+                    </div>
+                </>
             ) : (
                 <div className="empty-tasks-message">
                     <p>{hideCompleted ? "Aucune tâche en attente dans ce groupe." : "Aucune tâche n'a encore été créée dans ce groupe."}</p>

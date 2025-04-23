@@ -267,6 +267,64 @@
     text-decoration-color: var(--text-color-light);
 }
 
+/* Styles pour le drag and drop */
+.drag-handle {
+    cursor: grab;
+    margin-right: 14px;
+    padding: 10px;
+    border-radius: 4px;
+    color: var(--text-color-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    touch-action: none;
+}
+
+.drag-handle:hover {
+    color: var(--primary-color);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle svg {
+    width: 28px;
+    height: 28px;
+}
+
+.sortable-ghost {
+    opacity: 0.5;
+    background-color: var(--primary-color-light) !important;
+}
+
+.sortable-chosen {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(2deg);
+}
+
+/* Ajustement de la mise en page de li pour inclure la poignée */
+.tasks > li {
+    position: relative;
+    display: flex;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+    background-color: var(--task-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
 @media (max-width: 600px) {
     .task-form {
         flex-direction: column;
@@ -331,5 +389,15 @@
     .edit-buttons {
         align-self: flex-end;
         margin-top: 5px;
+    }
+
+    .drag-handle {
+        margin-right: 8px;
+        padding: 6px;
+    }
+
+    .drag-handle svg {
+        width: 24px;
+        height: 24px;
     }
 }
