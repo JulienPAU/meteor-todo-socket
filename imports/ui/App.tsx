@@ -223,11 +223,10 @@ export const App = () => {
         }
 
         return TasksCollection.find(hideCompleted ? { ...hideCompletedFilter, groupId: { $exists: false } } : { groupId: { $exists: false } }, {
-            sort: { position: 1, createdAt: -1 },
+            sort: { isUrgent: -1, position: 1, createdAt: -1 },
         }).fetch();
     });
 
-    // Initialiser Sortable.js pour les tâches personnelles
     useEffect(() => {
         if (tasksListRef.current && appMode === "tasks" && tasks.length > 0) {
             if (sortableRef.current) {

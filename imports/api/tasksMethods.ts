@@ -161,9 +161,7 @@ Meteor.methods({
             throw new Meteor.Error("not-authorized", "Vous devez être connecté pour réordonner les tâches");
         }
 
-        // Pour les tâches personnelles
         if (!groupId) {
-            // Vérifier que toutes les tâches appartiennent à l'utilisateur et ne sont pas des tâches de groupe
             const tasksCount = await TasksCollection.find({
                 _id: { $in: taskIds },
                 userId: this.userId,
@@ -174,7 +172,6 @@ Meteor.methods({
                 throw new Meteor.Error("not-authorized", "Certaines tâches n'appartiennent pas à cet utilisateur");
             }
 
-            // Mettre à jour les positions
             for (let index = 0; index < taskIds.length; index++) {
                 await TasksCollection.updateAsync(
                     { _id: taskIds[index] },
@@ -184,9 +181,7 @@ Meteor.methods({
 
             return true;
         }
-        // Pour les tâches de groupe
         else {
-            // Vérifier que l'utilisateur est membre du groupe
             const isMember = await GroupsCollection.find({
                 _id: groupId,
                 "members.userId": this.userId
@@ -196,7 +191,6 @@ Meteor.methods({
                 throw new Meteor.Error("not-authorized", "Vous n'êtes pas membre de ce groupe");
             }
 
-            // Vérifier que toutes les tâches appartiennent au groupe
             const groupTasksCount = await TasksCollection.find({
                 _id: { $in: taskIds },
                 groupId: groupId
@@ -206,7 +200,6 @@ Meteor.methods({
                 throw new Meteor.Error("not-authorized", "Certaines tâches n'appartiennent pas à ce groupe");
             }
 
-            // Mettre à jour les positions
             for (let index = 0; index < taskIds.length; index++) {
                 await TasksCollection.updateAsync(
                     { _id: taskIds[index] },
@@ -216,6 +209,39 @@ Meteor.methods({
 
             return true;
         }
-    }
+    },
+
+    "tasks.toggleUrgent": async function (taskId: string) {
+        check(taskId, String);
+
+        if (!this.userId) {
+            throw new Meteor.Error("not-authorized", "Vous devez être connecté pour modifier une tâche");
+        }
+
+        const task = await TasksCollection.findOneAsync({ _id: taskId });
+
+        if (!task) {
+            throw new Meteor.Error("task-not-found", "Tâche non trouvée");
+        }
+
+        if (task.groupId) {
+            const group = await GroupsCollection.findOneAsync({
+                _id: task.groupId,
+                "members.userId": this.userId
+            });
+
+            if (!group) {
+                throw new Meteor.Error("not-authorized", "Vous n'êtes pas membre du groupe de cette tâche");
+            }
+        }
+        else if (task.userId !== this.userId) {
+            throw new Meteor.Error("not-authorized", "Vous pouvez modifier uniquement vos propres tâches");
+        }
+
+        return await TasksCollection.updateAsync(
+            { _id: taskId },
+            { $set: { isUrgent: !task.isUrgent } }
+        );
+    },
 });
 

@@ -43,7 +43,7 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
                       isChecked: { $ne: true },
                   }
                 : { groupId: groupId },
-            { sort: { position: 1, createdAt: -1 } }
+            { sort: { isUrgent: -1, position: 1, createdAt: -1 } }
         ).fetch();
 
         const pendingTasksCount = TasksCollection.find({
@@ -54,7 +54,6 @@ export const GroupTasks = ({ groupId, currentUserId, onVisibilityChange }: Group
         return { tasks, pendingTasksCount, isLoading: false };
     }, [groupId, hideCompleted, currentUserId]);
 
-    // Initialiser Sortable.js pour les tâches de groupe
     useEffect(() => {
         if (groupTasksListRef.current && tasks.length > 0) {
             if (sortableRef.current) {
