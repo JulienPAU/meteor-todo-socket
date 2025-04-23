@@ -2,13 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { UsersCredentialsCollection } from "./UsersCollection";
 import { Accounts } from "meteor/accounts-base";
 import { TasksCollection } from "./TasksCollection";
-import { validateUsername, validatePassword } from "../utils/validators";
-
-const hashPassword = (password: string): string => {
-  return Array.from(password)
-    .reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0)
-    .toString();
-};
+import { validateUsername, validatePassword, hashPassword } from "../utils/validators";
 
 const createDefaultTasks = async (userId: string) => {
   const user = await Meteor.users.findOneAsync({ _id: userId });

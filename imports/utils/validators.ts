@@ -1,3 +1,5 @@
+import { Meteor } from "meteor/meteor";
+
 export const encryptMessage = (message: string): string => {
     if (!message) return '';
 
@@ -112,4 +114,134 @@ export const formatDate = (date: Date): string => {
     const year = date.getFullYear();
 
     return `${day}/${month}/${year}`;
+};
+
+export const checkTaskPermission = async (taskId: string, userId: string, GroupsCollection: any, TasksCollection: any) => {
+    if (!userId) {
+        throw new Meteor.Error("not-authorized", "Vous devez être connecté pour modifier une tâche");
+    }
+
+    const task = await TasksCollection.findOneAsync({ _id: taskId });
+
+    if (!task) {
+        throw new Meteor.Error("task-not-found", "Tâche non trouvée");
+    }
+
+    if (task.groupId) {
+        const group = await GroupsCollection.findOneAsync({
+            _id: task.groupId,
+            "members.userId": userId
+        });
+
+        if (!group) {
+            throw new Meteor.Error("not-authorized", "Vous n'êtes pas membre du groupe de cette tâche");
+        }
+    }
+    else if (task.userId !== userId) {
+        throw new Meteor.Error("not-authorized", "Vous pouvez modifier uniquement vos propres tâches");
+    }
+
+    return task;
+};
+
+export const hashPassword = (password: string): string => {
+    return Array.from(password)
+        .reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0)
+        .toString();
+};
+
+export const checkGroupMembership = async (
+    groupId: string,
+    userId: string,
+    GroupsCollection: any
+): Promise<{ members: { userId: string; role: string }[] }> => {
+    if (!userId) {
+        throw new Meteor.Error("not-authorized", "Vous devez être connecté");
+    }
+
+    const group = await GroupsCollection.findOneAsync({
+        _id: groupId,
+        "members.userId": userId
+    });
+
+    if (!group) {
+        throw new Meteor.Error("not-authorized", "Vous n'êtes pas membre de ce groupe");
+    }
+
+    return group;
+};
+
+export const checkMessagePermission = async (
+    messageId: string,
+    userId: string,
+    MessagesCollection: any,
+    GroupsCollection: any
+): Promise<any> => {
+    if (!userId) {
+        throw new Meteor.Error("not-authorized", "Vous devez être connecté");
+    }
+
+    const message = await MessagesCollection.findOneAsync({ _id: messageId });
+
+    if (!message) {
+        throw new Meteor.Error("message-not-found", "Message non trouvé");
+    }
+
+    if (message.groupId) {
+        const group = await GroupsCollection.findOneAsync({
+            _id: message.groupId,
+            "members.userId": userId
+        });
+
+        if (!group) {
+            throw new Meteor.Error("not-authorized", "Vous n'êtes pas membre de ce groupe");
+        }
+
+        const isAdmin = group.members.some(
+            (member: { userId: string; role: string }) => member.userId === userId && member.role === "admin"
+        );
+
+        if (message.senderId !== userId && !isAdmin) {
+            throw new Meteor.Error(
+                "not-authorized",
+                "Vous ne pouvez supprimer que vos propres messages ou être administrateur du groupe"
+            );
+        }
+    }
+    else if (message.senderId !== userId && message.receiverId !== userId) {
+        throw new Meteor.Error(
+            "not-authorized",
+            "Vous ne pouvez supprimer que vos propres messages ou les messages que vous avez reçus"
+        );
+    }
+
+    return message;
+};
+
+export const checkGroupAdminPermission = async (
+    groupId: string,
+    userId: string,
+    GroupsCollection: any
+): Promise<any> => {
+    if (!userId) {
+        throw new Meteor.Error("not-authorized", "Vous devez être connecté");
+    }
+
+    const group = await GroupsCollection.findOneAsync(groupId);
+    if (!group) {
+        throw new Meteor.Error("group-not-found", "Groupe non trouvé");
+    }
+
+    const isAdmin = group.members.some(
+        (member: { userId: string; role: string }) => member.userId === userId && member.role === "admin"
+    );
+
+    if (!isAdmin) {
+        throw new Meteor.Error(
+            "not-authorized",
+            "Seul un administrateur peut effectuer cette action"
+        );
+    }
+
+    return group;
 };
