@@ -225,7 +225,7 @@ export const App = () => {
         }
 
         return TasksCollection.find(hideCompleted ? { ...hideCompletedFilter, groupId: { $exists: false } } : { groupId: { $exists: false } }, {
-            sort: { isUrgent: -1, position: 1, createdAt: -1 },
+            sort: { isChecked: 1, isUrgent: -1, position: 1, createdAt: -1 },
         }).fetch();
     });
 

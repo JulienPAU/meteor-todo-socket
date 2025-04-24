@@ -58,7 +58,7 @@ export const GroupTasks = forwardRef<GroupTasksRefHandle, GroupTasksProps>(({ gr
                       isChecked: { $ne: true },
                   }
                 : { groupId: groupId },
-            { sort: { isUrgent: -1, position: 1, createdAt: -1 } }
+            { sort: { isChecked: 1, isUrgent: -1, position: 1, createdAt: -1 } }
         ).fetch();
 
         const pendingTasksCount = TasksCollection.find({
