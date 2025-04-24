@@ -61,7 +61,6 @@ header {
     flex-grow: 1;
     overflow: auto;
     background: white;
-    padding-bottom: 20px;
 }
 
 .loading-container {

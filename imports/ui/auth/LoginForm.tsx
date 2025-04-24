@@ -55,11 +55,13 @@ export const LoginForm = ({ setUser }: LoginFormProps) => {
             {error && <div className="error-message">{error}</div>}
 
             <div className="form-group">
-                <input type="text" placeholder="Nom d'utilisateur" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} minLength={3} maxLength={20} />
+                <label htmlFor="username">Nom d'utilisateur</label>
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} minLength={3} maxLength={20} />
             </div>
 
             <div className="form-group">
-                <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} minLength={6} maxLength={50} />
+                <label htmlFor="password">Mot de passe</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} minLength={6} maxLength={50} />
             </div>
 
             <button type="submit" disabled={isLoading}>

@@ -82,7 +82,7 @@ export const GroupsList = ({ onSelectGroup, selectedGroupId, onCreateGroup, curr
     }
 
     return (
-        <div className="groups-sidebar">
+        <div className="groups-sidebars">
             <div className="groups-header">
                 <h3>Mes groupes</h3>
                 <button className="create-group-btn" onClick={onCreateGroup} title="Créer un nouveau groupe">
@@ -120,6 +120,11 @@ export const GroupsList = ({ onSelectGroup, selectedGroupId, onCreateGroup, curr
                                             />
                                         )}
                                     </div>
+                                    {isAdmin && (
+                                        <button className="delete-group-btn" onClick={(e) => handleDeleteGroup(group._id!, e)} title="Supprimer le groupe">
+                                            &times;
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="group-meta">
                                     <span className="group-members-count">
@@ -127,11 +132,6 @@ export const GroupsList = ({ onSelectGroup, selectedGroupId, onCreateGroup, curr
                                         {group.members.length > 1 ? "s" : ""}
                                     </span>
                                     <span className="group-date">{formatDate(group.createdAt)}</span>
-                                    {isAdmin && (
-                                        <button className="delete-group-btn" onClick={(e) => handleDeleteGroup(group._id!, e)} title="Supprimer le groupe">
-                                            ×
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         );

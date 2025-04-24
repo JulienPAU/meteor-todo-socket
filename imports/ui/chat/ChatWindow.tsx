@@ -11,9 +11,11 @@ interface ChatWindowProps {
     selectedUserId: string;
     selectedUsername: string;
     currentUserId: string;
+    isMobileView?: boolean;
+    onBackToUsersList?: () => void;
 }
 
-export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: ChatWindowProps) => {
+export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId, isMobileView = false, onBackToUsersList }: ChatWindowProps) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -102,6 +104,13 @@ export const ChatWindow = ({ selectedUserId, selectedUsername, currentUserId }: 
     return (
         <div className="chat-window">
             <div className="chat-header">
+                {isMobileView && onBackToUsersList && (
+                    <button type="button" className="back-to-users-btn" onClick={onBackToUsersList} title="Retour à la liste des membres">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                )}
                 <h3>{selectedUsername}</h3>
             </div>
 
