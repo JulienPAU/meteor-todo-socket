@@ -60,7 +60,7 @@ header {
     flex-direction: column;
     flex-grow: 1;
     overflow: auto;
-    background: white;
+    background: var(--background);
 }
 
 .loading-container {

@@ -1,4 +1,5 @@
 @import "./styles/variables.css";
+@import "./styles/common.css";
 @import "./styles/layout.css";
 @import "./styles/auth.css";
 @import "./styles/navbar.css";

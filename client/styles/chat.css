@@ -6,8 +6,8 @@
 }
 
 .users-list {
-    background-color: #f5f7fa;
-    border-right: 1px solid #e1e4e8;
+    background-color: var(--background-secondary);
+    border-right: 1px solid var(--border-color);
     padding: 15px;
     overflow-y: auto;
     width: 100%;
@@ -24,7 +24,7 @@
 .user-item {
     padding: 10px;
     margin-bottom: 8px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: background-color 0.2s;
     display: flex;
@@ -32,7 +32,7 @@
 }
 
 .user-item:hover {
-    background-color: #e9ecef;
+    background-color: var(--hover-color);
 }
 
 .user-item.active {
@@ -41,12 +41,12 @@
 }
 
 .user-item.unread {
-    background-color: rgba(49, 84, 129, 0.1);
+    background-color: rgba(var(--primary-color-rgb), 0.1);
     font-weight: bold;
 }
 
 .unread-count {
-    background-color: #ff3046;
+    background-color: var(--danger-color);
     color: white;
     width: 22px;
     height: 22px;
@@ -61,7 +61,7 @@
 
 .empty-users-message,
 .no-messages {
-    color: #666;
+    color: var(--text-secondary);
     text-align: center;
     padding: 20px;
     font-style: italic;
@@ -99,7 +99,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #28a745;
+    background-color: var(--success-color);
     margin-left: 5px;
 }
 
@@ -108,13 +108,13 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background-color: white;
+    background-color: var(--background);
 }
 
 .chat-header {
-    background-color: #f5f7fa;
+    background-color: var(--background-secondary);
     padding: 10px 15px;
-    border-bottom: 1px solid #e1e4e8;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
 }
@@ -165,10 +165,10 @@
 }
 
 .message.received .message-content {
-    background-color: var(--background-secondary, #f0f2f5);
+    background-color: var(--background-secondary);
     color: var(--text-color);
     border-bottom-left-radius: 4px;
-    border-left: 3px solid var(--text-secondary, #888);
+    border-left: 3px solid var(--text-secondary);
 }
 
 .message-time {
@@ -187,8 +187,7 @@
 }
 
 .delete-message-btn {
-    background-color: rgba(0, 0, 0, 0.15);
-    color: rgba(255, 255, 255, 0.9);
+    color: black;
     border: none;
     border-radius: 50%;
     width: 24px;
@@ -206,7 +205,7 @@
 
 .message.sent .delete-message-btn {
     background-color: rgba(255, 255, 255, 0.2);
-    color: white;
+    color: black;
 }
 
 .message.sent .delete-message-btn:hover {
@@ -216,7 +215,7 @@
 
 .message-input-container {
     padding: 15px;
-    border-top: 1px solid #e1e4e8;
+    border-top: 1px solid var(--border-color);
     display: flex;
     gap: 10px;
 }
@@ -224,7 +223,7 @@
 .message-input {
     flex-grow: 1;
     padding: 10px 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     outline: none;
     transition: border-color 0.2s;
@@ -254,7 +253,7 @@
 }
 
 .send-button:disabled {
-    background-color: var(--primary-color-light, #cce5ff);
+    background-color: var(--primary-color-light);
     cursor: not-allowed;
     opacity: 0.7;
 }
@@ -265,7 +264,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: #666;
+    color: var(--text-secondary);
     padding: 20px;
     text-align: center;
     width: 100%;
@@ -291,12 +290,14 @@
     margin-right: 10px;
     cursor: pointer;
     color: var(--primary-color);
-    border-radius: 4px;
+    border-radius: var(--border-radius-sm);
     transition: background-color 0.2s;
+    box-shadow: none;
 }
 
 .back-to-users-btn:hover {
     background-color: rgba(0, 0, 0, 0.05);
+    transform: none;
 }
 
 .back-to-users-btn svg {
@@ -354,7 +355,7 @@
         background-color: var(--primary-color);
         color: white;
         border-radius: 50%;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--shadow-md);
         cursor: pointer;
         z-index: 100;
         font-size: 24px;
@@ -369,7 +370,7 @@
     position: absolute;
     top: -8px;
     right: -8px;
-    background-color: #ff3046;
+    background-color: var(--danger-color);
     color: white;
     width: 22px;
     height: 22px;

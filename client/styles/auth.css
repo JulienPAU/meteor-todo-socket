@@ -1,11 +1,13 @@
+/* Styles pour les pages d'authentification */
+
 .auth-container {
     max-width: min(90%, 400px);
     width: 100%;
     margin: 0 auto;
     padding: clamp(20px, 5vw, 30px);
     background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-lg);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -23,8 +25,8 @@
 .register-form {
     background-color: white;
     padding: clamp(18px, 4vw, 24px);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .login-form h2,
@@ -36,24 +38,7 @@
     font-size: clamp(20px, 6vw, 24px);
 }
 
-.form-group {
-    margin-bottom: 18px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-group input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(49, 84, 129, 0.2);
-    outline: none;
-}
+/* Les styles form-group sont dans common.css */
 
 .login-form button,
 .register-form button {
@@ -62,7 +47,7 @@
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--border-radius-md);
     font-size: 16px;
     margin-top: 10px;
 }
@@ -72,15 +57,7 @@
     background-color: var(--primary-color-light);
 }
 
-.error-message {
-    color: var(--error-color);
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: var(--error-background);
-    border-radius: 6px;
-    font-size: 14px;
-    text-align: center;
-}
+/* .error-message est dans common.css */
 
 .link-button {
     background: none;
@@ -95,4 +72,6 @@
 
 .link-button:hover {
     color: var(--primary-color-light);
+    transform: none;
+    box-shadow: none;
 }

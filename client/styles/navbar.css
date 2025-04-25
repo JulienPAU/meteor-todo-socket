@@ -68,7 +68,7 @@
     align-items: center;
     justify-content: center;
     padding: 0.6rem 1.2rem;
-    border-radius: 6px;
+    border-radius: var(--border-radius-md);
     font-size: 0.95rem;
     font-weight: 600;
     border: none;
@@ -80,7 +80,7 @@
 
 .navbar-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .navbar-button:active {
@@ -92,7 +92,7 @@
 }
 
 .action-button:hover {
-    background-color: var(--primary-color-dark);
+    background-color: var(--primary-color-light);
 }
 
 .logout-button {
@@ -110,22 +110,11 @@
     gap: 0.4rem;
 }
 
+/* Utilisation de la classe notification-badge de common.css avec des spécificités */
 .notification-badge {
     position: absolute;
     top: -8px;
     right: -1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    background-color: red;
-    color: white;
-    font-size: 0.8rem;
-    font-weight: bold;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -148,6 +137,7 @@
     cursor: pointer;
     padding: 0;
     z-index: 110;
+    box-shadow: none;
 }
 
 .navbar-hamburger span {
@@ -171,44 +161,16 @@
     animation: fadeIn 0.3s ease;
 }
 
-/* Animation pour la notification */
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
 /* Media queries pour le responsive */
 @media (max-width: 768px) {
     .navbar-hamburger {
         display: flex;
         box-shadow: none !important;
+    }
+
+    .navbar-hamburger:hover {
+        transform: none;
+        box-shadow: none;
     }
 
     .navbar-menu {

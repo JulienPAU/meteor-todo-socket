@@ -32,7 +32,7 @@
     .groups-container.mobile-group-active .group-header {
         position: sticky;
         top: 0;
-        background-color: white;
+        background-color: var(--background);
         z-index: 10;
         padding: 0.5rem;
     }
@@ -44,25 +44,20 @@
     }
 
     .back-to-groups-btn {
-        background-color: var(--accent-color);
         color: black;
         border: none;
-        border-radius: 4px;
+        border-radius: var(--border-radius-sm);
         padding: 0.4rem 0.8rem;
         font-size: 0.7rem;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2); /* Ajoute une ombre au texte pour meilleure lisibilité */
-    }
-
-    .back-to-groups-btn:hover {
-        background-color: var(--accent-hover);
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
     }
 
     .back-to-groups-btn svg {
-        margin-right: 0.3rem; /* Marge entre l'icône et le texte */
+        margin-right: 0.3rem;
     }
 
     .mobile-add-task-button {
@@ -76,7 +71,7 @@
         color: white;
         font-size: 24px;
         border: none;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--shadow-md);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -115,8 +110,8 @@
         width: 100%;
         padding: 0.75rem;
         font-size: 1rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
     }
 
     /* Bouton mobile pour masquer/afficher les tâches terminées */
@@ -135,7 +130,7 @@
         justify-content: center;
         z-index: 1000;
         cursor: pointer;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--shadow-sm);
     }
 
     .mobile-visibility-toggle:hover,
@@ -152,7 +147,7 @@
     .mobile-visibility-toggle img {
         width: 28px;
         height: 28px;
-        filter: brightness(0) invert(1); /* Pour rendre l'icône blanche */
+        filter: brightness(0) invert(1);
     }
 
     /* Agrandir un peu le texte des emojis utilisés comme icônes */
@@ -199,7 +194,7 @@
         background-color: var(--primary-color);
         color: white;
         border-radius: 50%;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--shadow-md);
         cursor: pointer;
         z-index: 100;
         font-size: 24px;
