@@ -24,9 +24,16 @@
         display: none !important;
     }
 
-    /* Style pour le mode groupe en mobile */
     .groups-container.mobile-group-active .groups-sidebar {
         display: none;
+    }
+
+    .no-group-selected {
+        display: none;
+    }
+
+    .groups-sidebar {
+        width: 100%;
     }
 
     .groups-container.mobile-group-active .group-header {
